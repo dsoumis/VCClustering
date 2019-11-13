@@ -22,7 +22,7 @@ VectorKMEANS<inputData>::manhattanDistance(vector<inputData> const &point, vecto
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::Initialization(InputGenericVector<int> const &pointsVector) {
+void VectorKMEANS<inputData>::InitializationSimplest(InputGenericVector<int> const &pointsVector) {
     centers.resize(k);
     for (unsigned int i = 0; i < k; ++i) {
         int randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
@@ -32,38 +32,73 @@ void VectorKMEANS<inputData>::Initialization(InputGenericVector<int> const &poin
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::Assignment(InputGenericVector<int> const &pointsVector) {
-    bool unchangedCenters = false;
-    while (!unchangedCenters) { //If the centers do not change we are done.
-        //For each loop erase the vector of clusters
-        clusters.clear();
-        clusters.shrink_to_fit();
-        clusters.resize(k);
-        //Assignment:For each point we find the nearest center using l1 metric(manhattan distance)
-        for (unsigned int point = 0; point < pointsVector.itemValues.size(); ++point) {
-            double min = manhattanDistance(pointsVector.itemValues[point].second, centers[0].second);
-            int minCentroidIndex = 0;
-            for (unsigned int centroid = 1; centroid < k; ++centroid) {
-                double distance_from_centroid = manhattanDistance(pointsVector.itemValues[point].second,
-                                                                  centers[centroid].second);
-                if (min > distance_from_centroid) {
-                    min = distance_from_centroid;
-                    minCentroidIndex = centroid;
-                }
-            }
+void VectorKMEANS<inputData>::AssignmentSimplest(InputGenericVector<int> const &pointsVector) {
 
-            clusters[minCentroidIndex].centroid = centers[minCentroidIndex].first;
-            clusters[minCentroidIndex].centroidCoordinates = centers[minCentroidIndex].second;
-            clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[point].first);
-            clusters[minCentroidIndex].indexes.push_back(point);
+    //For each assignment erase the vector of clusters
+    clusters.clear();
+    clusters.shrink_to_fit();
+    clusters.resize(k);
+    //Assignment:For each point we find the nearest center using l1 metric(manhattan distance)
+    for (unsigned int point = 0; point < pointsVector.itemValues.size(); ++point) {
+        double min = manhattanDistance(pointsVector.itemValues[point].second, centers[0].second);
+        int minCentroidIndex = 0;
+        for (unsigned int centroid = 1; centroid < k; ++centroid) {
+            double distance_from_centroid = manhattanDistance(pointsVector.itemValues[point].second,
+                                                              centers[centroid].second);
+            if (min > distance_from_centroid) {
+                min = distance_from_centroid;
+                minCentroidIndex = centroid;
+            }
         }
-        unchangedCenters = true;
-        Update(pointsVector, unchangedCenters);
+
+        clusters[minCentroidIndex].centroid = centers[minCentroidIndex].first;
+        clusters[minCentroidIndex].centroidCoordinates = centers[minCentroidIndex].second;
+        clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[point].first);
+        clusters[minCentroidIndex].indexes.push_back(point);
+    }
+
+}
+
+template<class inputData>
+void VectorKMEANS<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &pointsVector, int const &k_vec_given,
+                                                       int const &L_given) {
+    //ExactNeighboursVector<int> inputNeighboursVector(pointsVector,pointsVector, true);
+
+    double w = 8436.48;//inputNeighboursVector.wCalculator();
+    //cout<<w<<endl;
+    //exit(1);
+    //Create the LSH structure
+    lsh = new LSH(k_vec_given, L_given, w, pointsVector.itemValues[0].second.size());
+
+    //Assign points in LSH tables
+    for (unsigned int i = 0; i < pointsVector.itemValues.size(); ++i) {
+        for (unsigned int numberHashtable = 0; numberHashtable < lsh->L; numberHashtable++) {
+            unsigned int g = lsh->hashFunctions[numberHashtable].gCalculator(pointsVector.itemValues[i].second,
+                                                                             (unsigned int) lsh->k_vec, w);
+            lsh->hashTables->insertHashtable(numberHashtable, g, pointsVector.itemValues[i], i);
+        }
     }
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::Update(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+void VectorKMEANS<inputData>::ReverseAssignment(InputGenericVector<int> const &pointsVector) {
+    for (unsigned int i = 0; i < centers.size(); i++) {
+
+        pair<vector<string>, vector<int>> rangeNeighbors;
+        double radius = 1;
+        rangeNeighbors = lsh->hashTables->rangeSearch(centers[i], radius, lsh->hashFunctions, (unsigned int) lsh->k_vec,
+                                                      lsh->w);
+
+        clusters[i].centroid = centers[i].first;
+        clusters[i].centroidCoordinates = centers[i].second;
+        clusters[i].ItemIDs = rangeNeighbors.first;
+        clusters[i].indexes = rangeNeighbors.second;
+    }
+}
+
+template<class inputData>
+void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+    unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
         vector<int> temp;
         temp.resize(pointsVector.itemValues[0].second.size());
@@ -73,7 +108,7 @@ void VectorKMEANS<inputData>::Update(InputGenericVector<int> const &pointsVector
                 temp[j] += pointsVector.itemValues[index].second[j];
             }
             temp[j] = temp[j] /
-                      (int) clusters[i].indexes.size(); //Pithano segmentation fault an to iosto cluster den exei kanena stoixeio
+                      (int) clusters[i].indexes.size(); //Pithano segmentation fault an to i-osto cluster den exei kanena stoixeio
         }
         if (temp != centers[i].second) {
             unchangedCenters = false;
@@ -84,10 +119,34 @@ void VectorKMEANS<inputData>::Update(InputGenericVector<int> const &pointsVector
 }
 
 template<class inputData>
-VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> const &pointsVector, unsigned int k_given) {
+VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
+                                      unsigned int const &whichInitialization, unsigned int const &whichAssignment,
+                                      unsigned int const &whichUpdate) {
     k = k_given;
-    Initialization(pointsVector);
-    Assignment(pointsVector);
+    if (whichInitialization == 1)
+        InitializationSimplest(pointsVector);
+    else
+        cout << "foo" << endl;
+
+    //In this preload we create the lsh structures and put all points in the hash tables in order to be queried by the centroids
+    if (whichAssignment == 2)
+        ReverseAssignmentPreload(pointsVector, 4, 3);
+
+    bool unchangedCenters = false;
+    //If the centers do not change we are done.
+    while (!unchangedCenters) {
+
+        if (whichAssignment == 1)
+            AssignmentSimplest(pointsVector);
+        else
+            cout << "foo" << endl;
+
+        if (whichUpdate == 2)
+            UpdateSimplest(pointsVector, unchangedCenters);
+        else
+            cout << "foo" << endl;
+
+    }
 
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
@@ -108,7 +167,8 @@ VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> const &pointsVecto
 //            }
 //            cout<<endl;
     }
-
+    if (whichAssignment == 2)
+        free(lsh);
 }
 
 template
