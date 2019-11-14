@@ -13,6 +13,7 @@
 #include "InputImplementation.h"
 #include "HashTables.h"
 #include "BruteForceImplementation.h"
+#include "ClusterStructure.h"
 using namespace std;
 
 template<class inputData>
@@ -26,13 +27,16 @@ private:
         int L;
         int k_vec;
         double w;
+        double radius;
         HashTables<int> *hashTables;
         vector<HashFunctions<int>> hashFunctions;
 
-        LSH(int const &k_vec_given, int const &L_given, double const &w_given, unsigned long const &size) {
+        LSH(int const &k_vec_given, int const &L_given, double const &w_given, unsigned long const &size,
+            double const &radius_given) {
             k_vec = k_vec_given;
             L = L_given;
             w = w_given;
+            radius = radius_given;
             hashTables = new HashTables<int>((unsigned int) L);
             hashFunctions.reserve((unsigned long) L);
             for (unsigned int i = 0; i < L; i++) { //Create L g functions
@@ -46,12 +50,9 @@ private:
     };
 
     LSH *lsh;
-    struct cluster {
-        string centroid;
-        vector<int> centroidCoordinates;
-        vector<string> ItemIDs;
-        vector<int> indexes;
-    };
+    //Unordered map of itemIDs
+    //tuple of index of cluster assigned to, distance from centroid of cluster and index in pointsVector
+    unordered_map<string, tuple<int, double, int>> assignedItems;
     vector<struct cluster> clusters;
 
     void InitializationSimplest(InputGenericVector<int> const &pointsVector);

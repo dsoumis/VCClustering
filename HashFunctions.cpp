@@ -24,8 +24,8 @@ void HashFunctions<inputData>::calculateSi(unsigned int const &d, int const &k, 
 
 
 template<class inputData>
-inline int HashFunctions<inputData>::calculate_ai(inputData const &x, double const &s, double const &w) {
-    int a = (int) floor((x - s) / w); //floors down the integer
+inline int HashFunctions<inputData>::calculate_ai(inputData const &x, double const &S, double const &w) {
+    int a = (int) floor((x - S) / w); //floors down the integer
     return a;
 }
 
@@ -41,11 +41,11 @@ int modular_power(int x, unsigned int y, int p) {
 
     while (y > 0) {
         // If y is odd, multiply x with result
-        if (y & 1)
+        if (y & 1u)
             res = (res * x) % p;
 
         // y must be even now
-        y = y >> 1; // y = y/2
+        y = y >> 1u; // y = y/2
         x = (x * x) % p;
     }
     return res;
@@ -68,7 +68,7 @@ HashFunctions<inputData>::calculateH(vector<inputData> const &x, unsigned int wh
                                      unsigned int const &k) {
     auto d = (unsigned int) x.size();
     int h = 0;
-    int power = d - 1;
+    int power = (int) d - 1;
     for (unsigned int i = 0; i < d; i++) {
         h += calculate_ai(x.at(i), s[whichHashFunction].at(i), w) * m[power];
         power--;

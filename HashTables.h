@@ -10,6 +10,7 @@
 #include <ctime>
 #include <chrono>
 #include "HashFunctions.h"
+#include "ClusterStructure.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ template<class inputData>
 class HashTables {
 private:
     //A vector of hashtables. Unordered multimap allows many values to 1 key,which means collisions in 1 bucket.
-    //A bucket has an unsigned int key and a tuple of itemID, points of item
+    //A bucket has an unsigned int key and a tuple of itemID, points of item + an int index in initial vector + pair of index of cluster assigned to and distance from centroid of cluster
     vector<unordered_multimap<unsigned int, tuple<string, vector<inputData>, int> > > hashTables;
 
     double manhattanDistance(vector<inputData> const &point, vector<inputData> const &query);
@@ -30,9 +31,10 @@ public:
     void insertHashtable(unsigned int whichHashTable, unsigned int const &g, pair<string, vector<inputData>> &point,
                          int const &index);
 
-    pair<vector<string>, vector<int>> rangeSearch(pair<string, vector<inputData >> &query, double radius,
-                                                  vector<HashFunctions<int>> hashFunctions, unsigned int const &k,
-                                                  double const &w);
+    void rangeSearch(pair<string, vector<inputData >> &query, double radius,
+                     vector<HashFunctions<int>> hashFunctions, unsigned int const &k,
+                     double const &w, vector<struct cluster> &clusters, int const &index,
+                     unordered_map<string, tuple<int, double, int>> &assignedItems);
 };
 
 #endif //LSH_HASHTABLES_H
