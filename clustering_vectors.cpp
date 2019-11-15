@@ -1,6 +1,6 @@
-#include "k_means_vectors.h"
+#include "clustering_vectors.h"
 
-int generateNumber(int const &range_from,
+int generateNumberV(int const &range_from,
                    int const &range_to) {      //https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 
     random_device rand_dev;
@@ -13,7 +13,7 @@ int generateNumber(int const &range_from,
 
 template<class inputData>
 inline double
-VectorKMEANS<inputData>::manhattanDistance(vector<inputData> const &point, vector<inputData> const &query) {
+VectorClustering<inputData>::manhattanDistance(vector<inputData> const &point, vector<inputData> const &query) {
     double distance = 0;
     for (unsigned long i = 0; i < point.size(); ++i) {
         distance += abs(point[i] - query[i]);
@@ -22,14 +22,15 @@ VectorKMEANS<inputData>::manhattanDistance(vector<inputData> const &point, vecto
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::InitializationSimplest(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<int> const &pointsVector) {
     centers.resize(k);
     //We will use an unordered map so if a random value has been already selected to select another one
     unordered_map<int, bool> alreadySelectedRandom;
     for (unsigned int i = 0; i < k; ++i) {
-        int randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+        int randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
+        //While generated index has already been used, generate another one
         while (alreadySelectedRandom.find(randomIndex) != alreadySelectedRandom.end()) {
-            randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+            randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
         }
         alreadySelectedRandom[randomIndex] = true;
         centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
@@ -38,7 +39,7 @@ void VectorKMEANS<inputData>::InitializationSimplest(InputGenericVector<int> con
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::AssignmentSimplest(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<int> const &pointsVector) {
 
     //For each assignment erase the vector of clusters
     clusters.clear();
@@ -66,8 +67,9 @@ void VectorKMEANS<inputData>::AssignmentSimplest(InputGenericVector<int> const &
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &pointsVector, int const &k_vec_given,
-                                                       int const &L_given) {
+void
+VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &pointsVector, int const &k_vec_given,
+                                                      int const &L_given) {
     //ExactNeighboursVector<int> inputNeighboursVector(pointsVector,pointsVector, true);
 
     double w = 8436.48;//inputNeighboursVector.wCalculator();
@@ -102,7 +104,7 @@ void VectorKMEANS<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::ReverseAssignment(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<int> const &pointsVector) {
     //For each assignment erase the vector of clusters
     clusters.clear();
     clusters.shrink_to_fit();
@@ -185,7 +187,7 @@ void VectorKMEANS<inputData>::ReverseAssignment(InputGenericVector<int> const &p
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+void VectorClustering<inputData>::UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
     unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
         vector<inputData> temp;
@@ -200,7 +202,7 @@ void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &poin
             }
         } else
             //Assign randomly the coordinates of a point of pointVector
-            temp = pointsVector.itemValues[generateNumber(0, (int) pointsVector.itemValues.size() - 1)].second;
+            temp = pointsVector.itemValues[generateNumberV(0, (int) pointsVector.itemValues.size() - 1)].second;
         if (temp != centers[i].second) {
             unchangedCenters = false;
             centers[i].first = "OutofDataset";
@@ -210,7 +212,7 @@ void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &poin
 }
 
 template<class inputData>
-void VectorKMEANS<inputData>::UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+void VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
     unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
         double min_sum = numeric_limits<double>::max();
@@ -229,13 +231,13 @@ void VectorKMEANS<inputData>::UpdateALaLoyd(InputGenericVector<int> const &point
         cout << "min index " << min_index << endl;
         //If empty cluster assign at random
         if (min_index == -1) {
-            int randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+            int randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
 
             //Check if random value already exists in the centers
             while (true) {
                 for (unsigned int cluster = 0; cluster < k; ++cluster) {
                     if (centers[cluster].first == pointsVector.itemValues[randomIndex].first) {
-                        randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+                        randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
                         continue;
                     }
                 }
@@ -255,9 +257,10 @@ void VectorKMEANS<inputData>::UpdateALaLoyd(InputGenericVector<int> const &point
     }
 }
 template<class inputData>
-VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
-                                      unsigned int const &whichInitialization, unsigned int const &whichAssignment,
-                                      unsigned int const &whichUpdate) {
+VectorClustering<inputData>::VectorClustering(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
+                                              unsigned int const &whichInitialization,
+                                              unsigned int const &whichAssignment,
+                                              unsigned int const &whichUpdate) {
     k = k_given;
     if (whichInitialization == 1)
         InitializationSimplest(pointsVector);
@@ -308,4 +311,4 @@ VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, uns
 }
 
 template
-class VectorKMEANS<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
+class VectorClustering<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.

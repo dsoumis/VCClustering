@@ -24,11 +24,13 @@ public:
     vector<pair<string, vector<inputData> >> itemValues;
 
     //Function overloading
-    explicit InputGenericVector(string path, double &radius);
+    explicit InputGenericVector(string const &path, double &radius);
 
-    explicit InputGenericVector(string path);
+    explicit InputGenericVector(string const &path);
+
+    explicit InputGenericVector(string const &path, unsigned int &maxCurveSize, unsigned int &minCurveSize,
+                                bool const &input); //for curves
 
     void printVector();
 };
-//GenericVector<int> inputToVector();
 #endif

@@ -1,3 +1,5 @@
+#include <limits>
+#include <sstream>
 #include "InputImplementation.h"
 
 template<class inputData>
@@ -13,10 +15,10 @@ void InputGenericVector<inputData>::save() {
 
 template<class inputData>
 void InputGenericVector<inputData>::printVector() {
-    for (unsigned int i = 0; i < itemValues.size(); i++) {
+    for (unsigned long i = 0; i < itemValues.size(); i++) {
         //cout<<itemValues[i].second.size()<<endl;
         cout << itemValues[i].first << endl;
-        for (unsigned int j = 0; j < itemValues[i].second.size(); j++) {
+        for (unsigned long j = 0; j < itemValues[i].second.size(); j++) {
             cout << itemValues[i].second.at(j) << " ";
         }
         cout << endl;
@@ -33,8 +35,20 @@ void InputGenericVector<double>::constructorFunction(InputGenericVector<double> 
     vector.push(stod(value));
 }
 
+template<>
+void InputGenericVector<pair<double, double>>::constructorFunction(InputGenericVector<pair<double, double>> &vector,
+                                                                   string const &value) {
+    stringstream stream(value);
+    pair<double, double> vector_value;
+    string temp_str;
+    getline(stream, temp_str, ' ');
+    vector_value.first = stod(temp_str);
+    getline(stream, temp_str, ' ');
+    vector_value.second = stod(temp_str);
+    vector.push(vector_value);
+}
 template<class inputData>
-InputGenericVector<inputData>::InputGenericVector(string path) { //For input file
+InputGenericVector<inputData>::InputGenericVector(string const &path) { //For input file
     //The input file
     ifstream inputFile;
     try {
@@ -72,7 +86,7 @@ InputGenericVector<inputData>::InputGenericVector(string path) { //For input fil
 }
 
 template<class inputData>
-InputGenericVector<inputData>::InputGenericVector(string path, double &radius) { //For query file
+InputGenericVector<inputData>::InputGenericVector(string const &path, double &radius) { //For query file
     //The input file
     ifstream inputFile;
     try {
@@ -117,8 +131,87 @@ InputGenericVector<inputData>::InputGenericVector(string path, double &radius) {
     }
 }
 
+template<>
+void InputGenericVector<pair<double, double>>::printVector() {
+    for (auto const &item: itemValues) {
+        //cout<<itemValues[i].second.size()<<endl;
+        cout << item.first << endl;
+        cout.precision(numeric_limits<double>::max_digits10);
+        for (auto it:item.second) {
+            cout << "(" << it.first << "," << it.second << ") ";
+        }
+        cout << endl;
+    }
+}
 
+template<>
+InputGenericVector<pair<double, double>>::InputGenericVector(string const &path, unsigned int &maxCurveSize,
+                                                             unsigned int &minCurveSize,
+                                                             bool const &input) { //Specific for trajectories dataset. Wont work with other files due to line variable.
+    //The input file
+    ifstream inputFile;
+    try {
+        inputFile.open(path);
+        if (!inputFile.is_open())
+            cout << "Can't open file" << endl;
+
+        unsigned int line = 0; //Number of line that is currently read
+        unsigned int max_m = 0; //Max size of all grids
+        unsigned int min_m = 4294967295;//Min size of all grids
+        while (!inputFile.eof()) {
+            string sLine;
+            //Read line by line
+            getline(inputFile, sLine);
+            line++;
+            if (line > 7401 && input)
+                break;
+            if (line < 7402 && !input)
+                continue;
+            if (sLine.length() == 0)//Break if it's last line=empty line.
+                break;
+            size_t pos = 0;
+
+            while ((pos = sLine.find('\t')) != string::npos) {
+                itemID = sLine.substr(0, pos);
+
+                sLine.erase(0, pos + 1);
+                pos = sLine.find('\t');
+                unsigned int curve_size = (unsigned int) stoi(sLine.substr(0, pos));
+                if (curve_size > max_m)
+                    max_m = curve_size;
+                if (curve_size < min_m)
+                    min_m = curve_size;
+                sLine.erase(0, pos + 1);
+                for (unsigned int i = 0; i < curve_size; i++) {
+                    pos = sLine.find(',');
+                    string temp_str = sLine.substr(0, pos);
+                    temp_str.erase(0, 1); //Remove first character of string which is (
+
+                    sLine.erase(0, pos + 1);
+                    pos = sLine.find(')');
+                    temp_str += sLine.substr(0, pos);
+                    //cout<<"to temp pou stelnw "<<temp<<endl;
+                    constructorFunction(*this, temp_str);
+                    sLine.erase(0, pos + 2);
+                }
+            }
+            //Save the pushed values
+            this->save();
+        }
+
+        inputFile.close();
+        if (max_m > maxCurveSize)
+            maxCurveSize = max_m;
+        if (min_m < minCurveSize)
+            minCurveSize = min_m;
+    } catch (const char *msg) {
+        cerr << msg << endl;
+    }
+}
 template
 class InputGenericVector<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
 template
 class InputGenericVector<double>;
+
+template
+class InputGenericVector<pair<double, double>>;

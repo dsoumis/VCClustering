@@ -1,5 +1,5 @@
-#ifndef SECOND_STEP_K_MEANS_VECTORS_H
-#define SECOND_STEP_K_MEANS_VECTORS_H
+#ifndef SECOND_STEP_CLUSTERING_VECTORS_H
+#define SECOND_STEP_CLUSTERING_VECTORS_H
 
 #include <iostream>
 #include <string>
@@ -17,7 +17,7 @@
 using namespace std;
 
 template<class inputData>
-class VectorKMEANS {
+class VectorClustering {
 private:
     unsigned int k;
     vector<pair<string, vector<inputData>>> centers;
@@ -70,9 +70,9 @@ private:
     void UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters);
 
 public:
-    explicit VectorKMEANS(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
-                          unsigned int const &whichInitialization, unsigned int const &whichAssignment,
-                          unsigned int const &whichUpdate);
+    explicit VectorClustering(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
+                              unsigned int const &whichInitialization, unsigned int const &whichAssignment,
+                              unsigned int const &whichUpdate);
 };
 
-#endif //SECOND_STEP_K_MEANS_VECTORS_H
+#endif //SECOND_STEP_CLUSTERING_VECTORS_H
