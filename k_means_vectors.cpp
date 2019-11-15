@@ -188,7 +188,7 @@ template<class inputData>
 void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
     unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
-        vector<int> temp;
+        vector<inputData> temp;
         temp.resize(pointsVector.itemValues[0].second.size());
         if (!clusters[i].indexes.empty()) {
             //Calculate the mean of each dimension
@@ -196,12 +196,11 @@ void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &poin
                 for (auto index:clusters[i].indexes) {
                     temp[j] += pointsVector.itemValues[index].second[j];
                 }
-                temp[j] = temp[j] /
-                          (int) clusters[i].indexes.size(); //Pithano segmentation fault an to i-osto cluster den exei kanena stoixeio
+                temp[j] = temp[j] / (int) clusters[i].indexes.size();
             }
         } else
-            temp = pointsVector.itemValues[generateNumber(0, (int) pointsVector.itemValues.size() -
-                                                             1)].second; //Assign randomly the coordinates of a point of pointVector
+            //Assign randomly the coordinates of a point of pointVector
+            temp = pointsVector.itemValues[generateNumber(0, (int) pointsVector.itemValues.size() - 1)].second;
         if (temp != centers[i].second) {
             unchangedCenters = false;
             centers[i].first = "OutofDataset";
@@ -210,6 +209,51 @@ void VectorKMEANS<inputData>::UpdateSimplest(InputGenericVector<int> const &poin
     }
 }
 
+template<class inputData>
+void VectorKMEANS<inputData>::UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+    unchangedCenters = true;
+    for (unsigned int i = 0; i < k; ++i) {
+        double min_sum = numeric_limits<double>::max();
+        int min_index = -1;
+        for (unsigned long no_index1 = 0; no_index1 < clusters[i].indexes.size(); ++no_index1) {
+            double temp_sum = 0;
+            for (auto index2:clusters[i].indexes) {
+                temp_sum += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[no_index1]].second,
+                                              pointsVector.itemValues[index2].second);
+            }
+            if (min_sum > temp_sum) {
+                min_sum = temp_sum;
+                min_index = clusters[i].indexes[no_index1];
+            }
+        }
+        cout << "min index " << min_index << endl;
+        //If empty cluster assign at random
+        if (min_index == -1) {
+            int randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+
+            //Check if random value already exists in the centers
+            while (true) {
+                for (unsigned int cluster = 0; cluster < k; ++cluster) {
+                    if (centers[cluster].first == pointsVector.itemValues[randomIndex].first) {
+                        randomIndex = generateNumber(0, (int) pointsVector.itemValues.size() - 1);
+                        continue;
+                    }
+                }
+                break;
+            }
+            centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            unchangedCenters = false;
+            continue;
+        }
+        if (pointsVector.itemValues[min_index].second != centers[i].second) {
+            unchangedCenters = false;
+            centers[i].first = pointsVector.itemValues[min_index].first;
+            centers[i].second = pointsVector.itemValues[min_index].second;
+        }
+
+    }
+}
 template<class inputData>
 VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
                                       unsigned int const &whichInitialization, unsigned int const &whichAssignment,
@@ -225,7 +269,7 @@ VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, uns
         ReverseAssignmentPreload(pointsVector, 4, 3);
 
     bool unchangedCenters = false;
-    //If the centers do not change we are done.
+    //If the centers do not change we are done. We have the min objective function.
     while (!unchangedCenters) {
 
         if (whichAssignment == 1)
@@ -236,7 +280,7 @@ VectorKMEANS<inputData>::VectorKMEANS(InputGenericVector<int> &pointsVector, uns
         if (whichUpdate == 2)
             UpdateSimplest(pointsVector, unchangedCenters);
         else
-            cout << "foo" << endl;
+            UpdateALaLoyd(pointsVector, unchangedCenters);
 
     }
 

@@ -67,6 +67,8 @@ private:
 
     double manhattanDistance(vector<inputData> const &point, vector<inputData> const &query);
 
+    void UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters);
+
 public:
     explicit VectorKMEANS(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
                           unsigned int const &whichInitialization, unsigned int const &whichAssignment,

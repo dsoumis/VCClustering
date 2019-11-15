@@ -3,8 +3,8 @@
 #include "k_means_vectors.h"
 
 #define whichInitialization 1
-#define whichAssignment 2
-#define whichUpdate 2
+#define whichAssignment 1
+#define whichUpdate 1
 int main() {
     bool isVectors = true;
     unsigned int k = 5;
