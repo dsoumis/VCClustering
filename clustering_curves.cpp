@@ -59,6 +59,35 @@ void CurveClustering<inputData>::InitializationSimplest(InputGenericVector<input
 }
 
 template<class inputData>
+void CurveClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData> const &curvesVector) {
+
+    //For each assignment erase the vector of clusters
+    clusters.clear();
+    clusters.shrink_to_fit();
+    clusters.resize(k);
+    vector<vector<Cell>> tempFoo;
+    //Assignment:For each curve we find the nearest center using dtw metric
+    for (unsigned long curve = 0; curve < curvesVector.itemValues.size(); ++curve) {
+        double min = Dtw(curvesVector.itemValues[curve].second, centers[0].second, tempFoo);
+        unsigned int minCentroidIndex = 0;
+        for (unsigned int centroid = 1; centroid < k; ++centroid) {
+            double distance_from_centroid = Dtw(curvesVector.itemValues[curve].second, centers[centroid].second,
+                                                tempFoo);
+            if (min > distance_from_centroid) {
+                min = distance_from_centroid;
+                minCentroidIndex = centroid;
+            }
+        }
+
+        clusters[minCentroidIndex].centroid = centers[minCentroidIndex].first;
+        clusters[minCentroidIndex].centroidCoordinates = centers[minCentroidIndex].second;
+        clusters[minCentroidIndex].ItemIDs.push_back(curvesVector.itemValues[curve].first);
+        clusters[minCentroidIndex].indexes.push_back(curve);
+    }
+
+}
+
+template<class inputData>
 CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,

@@ -19,8 +19,9 @@ inline double HashTables<inputData>::manhattanDistance(vector<inputData> const &
 template<class inputData>
 void
 HashTables<inputData>::rangeSearch(pair<string, vector<inputData >> &query, double radius,
-                                   vector<HashFunctions<int>> hashFunctions, unsigned int const &k, double const &w,
-                                   vector<struct cluster> &clusters, int const &index,
+                                   vector<HashFunctions<inputData>> hashFunctions, unsigned int const &k,
+                                   double const &w,
+                                   vector<struct cluster<inputData>> &clusters, int const &index,
                                    unordered_map<string, tuple<int, double, int>> &assignedItems) {
 
     unordered_map<string, bool> alreadyInThisCluster;
@@ -86,3 +87,5 @@ HashTables<inputData>::rangeSearch(pair<string, vector<inputData >> &query, doub
 
 template
 class HashTables<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
+template
+class HashTables<double>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.

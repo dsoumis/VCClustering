@@ -32,8 +32,8 @@ public:
                          int const &index);
 
     void rangeSearch(pair<string, vector<inputData >> &query, double radius,
-                     vector<HashFunctions<int>> hashFunctions, unsigned int const &k,
-                     double const &w, vector<struct cluster> &clusters, int const &index,
+                     vector<HashFunctions<inputData>> hashFunctions, unsigned int const &k,
+                     double const &w, vector<struct cluster<inputData>> &clusters, int const &index,
                      unordered_map<string, tuple<int, double, int>> &assignedItems);
 };
 

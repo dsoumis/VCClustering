@@ -22,7 +22,7 @@ VectorClustering<inputData>::manhattanDistance(vector<inputData> const &point, v
 }
 
 template<class inputData>
-void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<inputData> const &pointsVector) {
     centers.resize(k);
     //We will use an unordered map so if a random value has been already selected to select another one
     unordered_map<int, bool> alreadySelectedRandom;
@@ -39,7 +39,7 @@ void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<int>
 }
 
 template<class inputData>
-void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData> const &pointsVector) {
 
     //For each assignment erase the vector of clusters
     clusters.clear();
@@ -68,7 +68,8 @@ void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<int> con
 
 template<class inputData>
 void
-VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &pointsVector, int const &k_vec_given,
+VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputData> &pointsVector,
+                                                      int const &k_vec_given,
                                                       int const &L_given) {
     //ExactNeighboursVector<int> inputNeighboursVector(pointsVector,pointsVector, true);
 
@@ -104,7 +105,7 @@ VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<int> &p
 }
 
 template<class inputData>
-void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<int> const &pointsVector) {
+void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData> const &pointsVector) {
     //For each assignment erase the vector of clusters
     clusters.clear();
     clusters.shrink_to_fit();
@@ -187,7 +188,8 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<int> cons
 }
 
 template<class inputData>
-void VectorClustering<inputData>::UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+void
+VectorClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &pointsVector, bool &unchangedCenters) {
     unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
         vector<inputData> temp;
@@ -212,7 +214,8 @@ void VectorClustering<inputData>::UpdateSimplest(InputGenericVector<int> const &
 }
 
 template<class inputData>
-void VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters) {
+void
+VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &pointsVector, bool &unchangedCenters) {
     unchangedCenters = true;
     for (unsigned int i = 0; i < k; ++i) {
         double min_sum = numeric_limits<double>::max();
@@ -257,7 +260,7 @@ void VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<int> const &p
     }
 }
 template<class inputData>
-VectorClustering<inputData>::VectorClustering(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
+VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                                               unsigned int const &whichInitialization,
                                               unsigned int const &whichAssignment,
                                               unsigned int const &whichUpdate) {
@@ -312,3 +315,5 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<int> &pointsVec
 
 template
 class VectorClustering<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
+template
+class VectorClustering<double>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.

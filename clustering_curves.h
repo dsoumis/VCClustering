@@ -14,6 +14,7 @@
 #include "HashTables.h"
 #include "BruteForceImplementation.h"
 #include "ClusterStructure.h"
+#include "Dtw.h"
 
 using namespace std;
 
@@ -22,11 +23,13 @@ class CurveClustering {
 private:
     unsigned int k;
     vector<pair<string, vector<inputData>>> centers;
-
+    vector<struct cluster<inputData>> clusters;
     void InitializationSimplest(InputGenericVector<inputData> const &pointsVector, unsigned long const &lamda);
 
+    void AssignmentSimplest(InputGenericVector<inputData> const &pointsVector);
+
 public:
-    explicit CurveClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
+    explicit CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
                              unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                              unsigned int const &whichUpdate);
 };

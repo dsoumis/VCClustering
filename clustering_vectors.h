@@ -28,8 +28,8 @@ private:
         int k_vec;
         double w;
         double radius;
-        HashTables<int> *hashTables;
-        vector<HashFunctions<int>> hashFunctions;
+        HashTables<inputData> *hashTables;
+        vector<HashFunctions<inputData>> hashFunctions;
 
         LSH(int const &k_vec_given, int const &L_given, double const &w_given, unsigned long const &size,
             double const &radius_given) {
@@ -37,10 +37,10 @@ private:
             L = L_given;
             w = w_given;
             radius = radius_given;
-            hashTables = new HashTables<int>((unsigned int) L);
+            hashTables = new HashTables<inputData>((unsigned int) L);
             hashFunctions.reserve((unsigned long) L);
             for (unsigned int i = 0; i < L; i++) { //Create L g functions
-                hashFunctions.emplace_back(HashFunctions<int>(k_vec, size, w));
+                hashFunctions.emplace_back(HashFunctions<inputData>(k_vec, size, w));
             }
         }
 
@@ -53,24 +53,25 @@ private:
     //Unordered map of itemIDs
     //tuple of index of cluster assigned to, distance from centroid of cluster and index in pointsVector
     unordered_map<string, tuple<int, double, int>> assignedItems;
-    vector<struct cluster> clusters;
+    vector<struct cluster<inputData>> clusters;
 
-    void InitializationSimplest(InputGenericVector<int> const &pointsVector);
+    void InitializationSimplest(InputGenericVector<inputData> const &pointsVector);
 
-    void AssignmentSimplest(InputGenericVector<int> const &pointsVector);
+    void AssignmentSimplest(InputGenericVector<inputData> const &pointsVector);
 
-    void ReverseAssignmentPreload(InputGenericVector<int> &pointsVector, int const &k_vec_given, int const &L_given);
+    void
+    ReverseAssignmentPreload(InputGenericVector<inputData> &pointsVector, int const &k_vec_given, int const &L_given);
 
-    void ReverseAssignment(InputGenericVector<int> const &pointsVector);
+    void ReverseAssignment(InputGenericVector<inputData> const &pointsVector);
 
-    void UpdateSimplest(InputGenericVector<int> const &pointsVector, bool &unchangedCenters);
+    void UpdateSimplest(InputGenericVector<inputData> const &pointsVector, bool &unchangedCenters);
 
     double manhattanDistance(vector<inputData> const &point, vector<inputData> const &query);
 
-    void UpdateALaLoyd(InputGenericVector<int> const &pointsVector, bool &unchangedCenters);
+    void UpdateALaLoyd(InputGenericVector<inputData> const &pointsVector, bool &unchangedCenters);
 
 public:
-    explicit VectorClustering(InputGenericVector<int> &pointsVector, unsigned int const &k_given,
+    explicit VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                               unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                               unsigned int const &whichUpdate);
 };

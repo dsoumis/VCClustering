@@ -90,3 +90,5 @@ HashFunctions<inputData>::gCalculator(const vector<inputData> &x, unsigned int c
 
 template
 class HashFunctions<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
+template
+class HashFunctions<double>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.

@@ -6,9 +6,10 @@
 #include <vector>
 
 using namespace std;
+template<class inputData>
 struct cluster {
     string centroid;
-    vector<int> centroidCoordinates;
+    vector<inputData> centroidCoordinates;
     vector<string> ItemIDs;
     vector<int> indexes;
 };
