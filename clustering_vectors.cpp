@@ -289,7 +289,8 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
             UpdateALaLoyd(pointsVector, unchangedCenters);
 
     }
-
+    if (whichAssignment == 2)
+        free(lsh);
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
 //            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
@@ -309,8 +310,52 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
 //            }
 //            cout<<endl;
     }
-    if (whichAssignment == 2)
-        free(lsh);
+
+    double silhouete_total = 0;
+    cout << "Silhouette: [";
+    for (unsigned int i = 0; i < k; ++i) {
+        double silhouete_of_cluster = 0;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            double silhouete_of_item = 0;
+            double a = 0;
+            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
+                a += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                       pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
+            }
+            a /= clusters[i].ItemIDs.size();
+            unsigned int second_best_cluster = i;
+            double min = numeric_limits<double>::max();
+            for (unsigned int cluster = 0; cluster < k; cluster++) {
+                if (cluster == i)
+                    continue;
+                double temp = manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                clusters[cluster].centroidCoordinates);
+                if (min > temp) {
+                    min = temp;
+                    second_best_cluster = cluster;
+                }
+            }
+
+            double b = 0;
+            for (unsigned long item_in_cluster = 0;
+                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
+                b += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                       pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
+            }
+            b /= clusters[second_best_cluster].ItemIDs.size();
+            silhouete_of_item = b - a;
+            if (b > a)
+                silhouete_of_item /= b;
+            else
+                silhouete_of_item /= a;
+            silhouete_of_cluster += silhouete_of_item;
+        }
+        silhouete_of_cluster /= clusters[i].ItemIDs.size();
+        silhouete_total += silhouete_of_cluster;
+        cout << silhouete_of_cluster << ",";
+    }
+    silhouete_total /= pointsVector.itemValues.size();
+    cout << " " << silhouete_total << "]" << endl;
 }
 
 template
