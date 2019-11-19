@@ -26,6 +26,17 @@ void InputGenericVector<inputData>::printVector() {
 }
 
 template<>
+void InputGenericVector<pair<double, double>>::maxCoordFinder(double &max) {
+    for (auto const &item:itemValues) {
+        for (auto const &item_ind:item.second) {
+            if (max < item_ind.first)
+                max = item_ind.first;
+            if (max < item_ind.second)
+                max = item_ind.second;
+        }
+    }
+}
+template<>
 void InputGenericVector<int>::constructorFunction(InputGenericVector<int> &vector, string const &value) {
     vector.push(stoi(value));
 }

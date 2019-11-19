@@ -35,6 +35,10 @@ public:
                      vector<HashFunctions<inputData>> hashFunctions, unsigned int const &k,
                      double const &w, vector<struct cluster<inputData>> &clusters, int const &index,
                      unordered_map<string, tuple<int, double, int>> &assignedItems);
+
+    void rangeSearch(tuple<string, vector<pair<double, double>>, int> &query, double radius, unsigned int const &g,
+                     vector<struct cluster<pair<double, double>>> &clusters, int const &index,
+                     unordered_map<string, tuple<int, double, int>> &assignedItems);
 };
 
 #endif //LSH_HASHTABLES_H

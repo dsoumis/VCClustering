@@ -12,49 +12,20 @@ int generateNumberC(int const &range_from,
 }
 
 template<class inputData>
-void CurveClustering<inputData>::InitializationSimplest(InputGenericVector<inputData> const &pointsVector,
-                                                        unsigned long const &lamda) {
+void CurveClustering<inputData>::InitializationSimplest(InputGenericVector<inputData> const &curvesVector) {
     centers.resize(k);
     //We will use an unordered map so if a random value has been already selected to select another one
     unordered_map<int, bool> alreadySelectedRandom;
     for (unsigned int i = 0; i < k; ++i) {
-        int randomIndex = generateNumberC(0, (int) pointsVector.itemValues.size() - 1);
-        //While generated index has already been used, generate another one || curve size of this index is <lamda
-        while (alreadySelectedRandom.find(randomIndex) != alreadySelectedRandom.end() ||
-               pointsVector.itemValues[randomIndex].second.size() < lamda) {
-            randomIndex = generateNumberC(0, (int) pointsVector.itemValues.size() - 1);
+        int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
+        //While generated index has already been used, generate another one
+        while (alreadySelectedRandom.find(randomIndex) != alreadySelectedRandom.end()) {
+            randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
         }
         alreadySelectedRandom[randomIndex] = true;
-        centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a curve of pointVector
-
-        //If curve's length is already lamda assign the whole sequence of coordinates
-        if (pointsVector.itemValues[randomIndex].second.size() == lamda) {
-            centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a curve of pointVector
-            //If curve's length is greater than lamda generate an index in sequence of coordinates
-        } else {
-            int randomSubsequenceIndex = generateNumberC(0,
-                                                         (int) pointsVector.itemValues[randomIndex].second.size() - 1);
-            //check if points after index are enough to successfully create the subsequence. index + point after it must equal lamda
-            while (true) {
-                unsigned int subsequence_lentgh = 0;
-                for (unsigned long ind = randomSubsequenceIndex;
-                     ind < pointsVector.itemValues[randomIndex].second.size(); ++ind) {
-                    subsequence_lentgh++;
-                }
-                if (subsequence_lentgh == lamda) {
-                    //Assign the lamda-subsequence
-                    for (unsigned long ind = randomSubsequenceIndex;
-                         ind < pointsVector.itemValues[randomIndex].second.size(); ++ind) {
-                        centers[i].second.push_back(pointsVector.itemValues[randomIndex].second[ind]);
-                    }
-                    break;
-                } else {
-                    randomSubsequenceIndex = generateNumberC(0,
-                                                             (int) pointsVector.itemValues[randomIndex].second.size() -
-                                                             1);
-                }
-            }
-        }
+        get<0>(centers[i]) = curvesVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+        get<1>(centers[i]) = curvesVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+        get<2>(centers[i]) = randomIndex;
     }
 }
 
@@ -85,23 +56,471 @@ void CurveClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData
         clusters[minCentroidIndex].indexes.push_back(curve);
     }
 
+//    for (unsigned int i = 0; i < k; ++i) {
+//        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
+//        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+//            if (item == clusters[i].ItemIDs.size() - 1) {
+//                cout << clusters[i].ItemIDs[item] << "}" << endl;
+//            } else
+//                cout << clusters[i].ItemIDs[item] << ", ";
+//        }
+//    }
+}
+
+double deltaCalculator(InputGenericVector<pair<double, double>> const &curvesVector) {
+    double delta = 0;
+    for (auto const &curve:curvesVector.itemValues) {
+        double temp = 0;
+        for (unsigned long coord = 0; coord < curve.second.size() - 1; coord++) {
+            temp += sqrt((curve.second[coord].first - curve.second[coord + 1].first) *
+                         (curve.second[coord].first - curve.second[coord + 1].first)
+                         + (curve.second[coord].second - curve.second[coord + 1].second) *
+                           (curve.second[coord].second - curve.second[coord + 1].second));   //Euclidean distance
+        }
+        temp /= curve.second.size();
+        delta += temp;
+    }
+    delta /= curvesVector.itemValues.size();
+    return delta;
+}
+template<class inputData>
+void CurveClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputData> &curvesVector,
+                                                          int const &k_vec_given, int const &L_given,
+                                                          unsigned int const &dimensions) {
+    double delta = deltaCalculator(curvesVector);
+    double max_coord = 0; //Consider max coordinate to be zero
+    curvesVector.maxCoordFinder(max_coord); //Find  the max coordinate to use it in vector padding
+    max_coord *= 100;
+    max_coord /= delta;
+    vector<vector<Cell>> foo;
+    double radius = numeric_limits<double>::max();
+    for (unsigned int i = 0; i < k; ++i) {
+        for (unsigned int j = 0; j < k; ++j) {
+            if (i != j) {
+                double temp = Dtw(centers[i].second, centers[j].second, foo);
+                if (temp < radius)
+                    radius = temp;
+            }
+        }
+    }
+    radius = radius / 2;
+
+    //Create the LSH structure
+    lsh = new LSH(k_vec_given, L_given, radius, minCurveSize, maxCurveSize, dimensions, delta, curvesVector, max_coord);
+
+    //Assign curves in Grids
+    for (unsigned long curve = 0; curve < curvesVector.itemValues.size(); curve++) {
+        for (unsigned int i = 0; i < lsh->L_grid; i++) {
+            //Hash the concatenated vector to the 1 LSH hash table of each grid
+            unsigned int g = lsh->hashFunctions[i].gCalculator(lsh->concatenated_gridCurve_vectors[i][curve],
+                                                               lsh->k_vec, lsh->w[i]);
+            lsh->hashTables[i].insertHashtable(0, g, curvesVector.itemValues[curve], curve);
+        }
+        assignedItems[curvesVector.itemValues[curve].first] = make_tuple(-1, -1, curve);
+    }
+    cout << "komple " << assignedItems.size() << endl;
 }
 
 template<class inputData>
-CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
+void CurveClustering<inputData>::ReverseAssignment(InputGenericVector<inputData> const &curvesVector) {
+    //For each assignment erase the vector of clusters
+    clusters.clear();
+    clusters.shrink_to_fit();
+    clusters.resize(k);
+
+    unsigned int clustered_items = 0;
+    auto conditionSuccessAmount = (unsigned int) round(0.7 * curvesVector.itemValues.size());
+    cout << "success " << conditionSuccessAmount << endl;
+    while (clustered_items < conditionSuccessAmount) {
+        cout << "3ana!! " << lsh->radius << " " << clustered_items << endl;
+        //In 1 out of 100 times there is a possibility points to be scattered in different buckets than the center so although we increase the radius,there are not any more points in the buckets.
+        //So we break the loop and bruteforce the assignment :/
+        if (lsh->radius == numeric_limits<double>::infinity()) {
+            break;
+        }
+        for (unsigned int i = 0; i < k; ++i) {
+
+            vector<double> concatenated_gridCurve_vector;
+            for (unsigned int grid = 1; grid < lsh->L_grid; grid++) {
+                //Create the concatenated grid curve vector for each curve of each grid
+                concatenated_gridCurve_vector = lsh->grids[grid].concatenated_vector_from_gridCurve(get<1>(centers[i]),
+                                                                                                    maxCurveSize,
+                                                                                                    lsh->max_coord);
+                //Hash the concatenated vector to the 1 LSH hash table of each grid
+                unsigned int g = lsh->hashFunctions[grid].gCalculator(concatenated_gridCurve_vector, lsh->k_vec,
+                                                                      lsh->w[grid]);
+                lsh->hashTables[grid].rangeSearch(centers[i], lsh->radius, g, clusters, i, assignedItems);
+
+            }
+
+            clusters[i].centroid = centers[i].first;
+            clusters[i].centroidCoordinates = centers[i].second;
+            clustered_items = 0;
+            for (unsigned int cluster = 0; cluster < k; ++cluster) {
+                clustered_items += clusters[cluster].ItemIDs.size();
+            }
+
+        }
+        lsh->radius *= 2;
+    }
+    vector<vector<Cell>> foo;
+    //Assign the points which were not assigned by range search
+    for (auto itr = assignedItems.begin(); itr != assignedItems.end(); itr++) {
+        if (get<0>(itr->second) == -1) {
+            double min = Dtw(curvesVector.itemValues[get<2>(itr->second)].second, centers[0].second, foo);
+            unsigned int minCentroidIndex = 0;
+            for (unsigned int centroid = 1; centroid < k; ++centroid) {
+                double distance_from_centroid = Dtw(curvesVector.itemValues[get<2>(itr->second)].second,
+                                                    centers[centroid].second, foo);
+                if (min > distance_from_centroid) {
+                    min = distance_from_centroid;
+                    minCentroidIndex = centroid;
+                }
+            }
+
+            clusters[minCentroidIndex].ItemIDs.push_back(curvesVector.itemValues[get<2>(itr->second)].first);
+            clusters[minCentroidIndex].indexes.push_back(get<2>(itr->second));
+        } else {
+            //Unassign points for new centers
+            get<0>(itr->second) = -1;
+            get<1>(itr->second) = -1;
+        }
+    }
+    //lsh->hashTables->unassignedPointsHandling(clusters,centers,k);
+    unsigned int howmany = 0;
+    for (auto itr = assignedItems.begin(); itr != assignedItems.end(); itr++) {
+        if (get<0>(itr->second) != -1)
+            howmany++;
+    }
+
+    //Note to me:Delete later
+//cout<<"how many "<<howmany<<endl;
+//    cout<<"clustered "<<clustered_items<<endl;
+//    clustered_items=0;
+//    for(unsigned int i=0; i<k; i++){
+//        clustered_items+=clusters[i].ItemIDs.size();
+//    }
+//    cout<<"clustered "<<clustered_items<<endl;
+//
+//    for (unsigned int i = 0; i < k; ++i) {
+//        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
+//        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+//            if (item == clusters[i].ItemIDs.size() - 1) {
+//                cout << clusters[i].ItemIDs[item] << "}" << endl;
+//            } else
+//                cout << clusters[i].ItemIDs[item] << ", ";
+//        }
+//    }
+    //exit(1);
+}
+
+template<class inputData>
+void CurveClustering<inputData>::InitializationUpdate(unsigned int const &cluster_index,
+                                                      InputGenericVector<inputData> const &curvesVector,
+                                                      unsigned long &lamda, vector<inputData> &C) {
+    lamda = 0;
+    //Add the length of each curve which exists in cluster by indexing them in the original GenericVector
+    for (unsigned long curve = 0; curve < clusters[cluster_index].ItemIDs.size(); ++curve) {
+        lamda += curvesVector.itemValues[clusters[cluster_index].indexes[curve]].second.size();
+    }
+    lamda /= clusters[cluster_index].ItemIDs.size();
+    //Random index in cluster
+    int randomIndex = generateNumberC(0, (int) clusters[cluster_index].ItemIDs.size() - 1);
+    //Check if the sequence's length is >lamda by indexing in the original GenericVector using the saved index of curve which exists in cluster
+    while (curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size() < lamda) {
+        randomIndex = generateNumberC(0, (int) clusters[cluster_index].ItemIDs.size() - 1);
+    }
+
+    //If curve's length is already lamda assign the whole sequence of coordinates
+    if (curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size() == lamda) {
+        C = curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second;
+    }
+        //If curve's length is greater than lamda generate an index in sequence of coordinates
+    else {
+        int randomSubsequenceIndex = generateNumberC(0,
+                                                     (int) curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size() -
+                                                     1);
+        //check if points after index are enough to successfully create the subsequence. index + point after it must equal lamda
+        while (true) {
+            unsigned int subsequence_lentgh = 0;
+            for (unsigned long ind = randomSubsequenceIndex;
+                 ind < curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size(); ++ind) {
+                subsequence_lentgh++;
+            }
+            if (subsequence_lentgh == lamda) {
+                //Assign the lamda-subsequence
+                for (unsigned long ind = randomSubsequenceIndex;
+                     ind < curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size(); ++ind) {
+                    C.push_back(curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second[ind]);
+                }
+                break;
+            } else {
+                randomSubsequenceIndex = generateNumberC(0,
+                                                         (int) curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size() -
+                                                         1);
+            }
+        }
+    }
+}
+
+template<class inputData>
+void
+CurveClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &curvesVector, bool &unchangedCenters) {
+    unchangedCenters = true;
+    vector<vector<Cell>> dummy;
+    for (unsigned int i = 0; i < k; ++i) {
+        unsigned long lamda;
+        vector<inputData> C;
+        if (!clusters[i].indexes.empty()) {
+            vector<inputData> C_;
+
+            InitializationUpdate(i, curvesVector, lamda, C);
+
+            do {
+
+                C_ = C;
+                vector<vector<pair<double, double>>> A;
+                A.resize(lamda);
+                vector<vector<Cell>> temp;
+                for (unsigned long curve = 0; curve < clusters[i].ItemIDs.size(); ++curve) {
+                    Dtw(C, curvesVector.itemValues[clusters[i].indexes[curve]].second, temp);
+                    vector<pair<int, int>> IPairs = printPath(temp);
+                    for (auto const &pair:IPairs) {
+                        A[pair.first].push_back(
+                                curvesVector.itemValues[clusters[i].indexes[curve]].second[pair.second]);
+                    }
+                }
+
+                for (unsigned long j = 0; j < lamda; ++j) {
+                    pair<double, double> meanA;
+                    meanA.first = 0;
+                    meanA.second = 0;
+                    for (auto const &pair:A[j]) {
+                        meanA.first += pair.first;
+                        meanA.second += pair.second;
+                    }
+                    C[j] = meanA;
+                }
+
+            } while (C_ == C /*|| Dtw(C, C_, dummy)<=0.05*/);
+        } else {
+            //Assign randomly the coordinates of a curve of curvesVector
+            int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
+
+            //Check if random value already exists in the centers
+            while (true) {
+                for (unsigned int cluster = 0; cluster < k; ++cluster) {
+                    if (centers[cluster].first == curvesVector.itemValues[randomIndex].first) {
+                        randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
+                        continue;
+                    }
+                }
+                break;
+            }
+            centers[i].first = curvesVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            centers[i].second = curvesVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            unchangedCenters = false;
+            continue;
+        }
+
+        if (C != centers[i].second) {
+            unchangedCenters = false;
+            centers[i].first = "OutofDataset";
+            centers[i].second = C;
+        }
+
+    }
+
+}
+
+template<class inputData>
+void
+CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &curvesVector, bool &unchangedCenters) {
+    unchangedCenters = true;
+    vector<vector<Cell>> foo;
+    for (unsigned int i = 0; i < k; ++i) {
+        double min_sum = numeric_limits<double>::max();
+        int min_index = -1;
+        for (unsigned long no_index1 = 0; no_index1 < clusters[i].indexes.size(); ++no_index1) {
+            double temp_sum = 0;
+            for (auto index2:clusters[i].indexes) {
+                //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+                auto iterator_to_calculatedDistances = calculatedDistances.find(
+                        make_pair((int) clusters[i].indexes[no_index1], (int) index2));
+                if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+                    double temp_dist = Dtw(curvesVector.itemValues[clusters[i].indexes[no_index1]].second,
+                                           curvesVector.itemValues[index2].second, foo);
+                    temp_sum += temp_dist;
+                    calculatedDistances[make_pair((int) clusters[i].indexes[no_index1], (int) index2)] = temp_dist;
+                } else {
+                    temp_sum += iterator_to_calculatedDistances->second;
+                }
+            }
+            if (min_sum > temp_sum) {
+                min_sum = temp_sum;
+                min_index = clusters[i].indexes[no_index1];
+            }
+        }
+        cout << "min index " << min_index << endl;
+        //If empty cluster assign at random
+        if (min_index == -1) {
+            int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
+
+            //Check if random value already exists in the centers
+            while (true) {
+                for (unsigned int cluster = 0; cluster < k; ++cluster) {
+                    if (centers[cluster].first == curvesVector.itemValues[randomIndex].first) {
+                        randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
+                        continue;
+                    }
+                }
+                break;
+            }
+            centers[i].first = curvesVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            centers[i].second = curvesVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            unchangedCenters = false;
+            continue;
+        }
+        if (curvesVector.itemValues[min_index].second != centers[i].second) {
+            unchangedCenters = false;
+            centers[i].first = curvesVector.itemValues[min_index].first;
+            centers[i].second = curvesVector.itemValues[min_index].second;
+        }
+
+    }
+}
+
+template<class inputData>
+CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
+                                            unsigned int const &maxSize, unsigned int const &minSize,
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,
                                             unsigned int const &whichUpdate) {
     k = k_given;
-    unsigned long lamda = 0;
-    for (auto const &curve:pointsVector.itemValues) {
-        lamda += curve.second.size();
-    }
-    lamda /= pointsVector.itemValues.size();
+    maxCurveSize = maxSize * 2;//Because its vector will consist of x1,y1,x2,y2,x3,y3 not in pairs
+    minCurveSize = minSize;
+
+    auto start = std::chrono::system_clock::now();
     if (whichInitialization == 1)
-        InitializationSimplest(pointsVector, lamda);
+        InitializationSimplest(curvesVector);
     else
         cout << "foo" << endl;
+
+    //In this preload we create the lsh structures and put all points in the hash tables in order to be queried by the centroids
+    if (whichAssignment == 2)
+        ReverseAssignmentPreload(curvesVector, 4, 4, 2);
+
+    bool unchangedCenters = false;
+    //If the centers do not change we are done. We have the min objective function.
+    while (!unchangedCenters) {
+        cout << "3anampainw" << endl;
+        if (whichAssignment == 1)
+            AssignmentSimplest(curvesVector);
+        else
+            ReverseAssignment(curvesVector);
+        if (whichUpdate == 2)
+            UpdateSimplest(curvesVector, unchangedCenters);
+        else
+            UpdateALaLoyd(curvesVector, unchangedCenters);
+
+    }
+    cout << "den bgainw" << endl;
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> clustering_duration = end - start;
+
+    if (whichAssignment == 2)
+        free(lsh);
+    for (unsigned int i = 0; i < k; ++i) {
+        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
+//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
+//                cout<<clusters[i].centroidCoordinates[item]<<" ";
+//            }
+//            cout<<endl;
+//            cout<<"Items"<<endl;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            if (item == clusters[i].ItemIDs.size() - 1) {
+                cout << clusters[i].ItemIDs[item] << "}" << endl;
+            } else
+                cout << clusters[i].ItemIDs[item] << ", ";
+        }
+//            cout<<"Indexes"<<endl;
+//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
+//                cout<<clusters[i].indexes[item]<<" ";
+//            }
+//            cout<<endl;
+    }
+
+
+    cout << "Clustering_time: " << clustering_duration.count() << endl;
+
+    double silhouete_total = 0;
+    vector<vector<Cell>> foo;
+    cout << "Silhouette: [";
+    for (unsigned int i = 0; i < k; ++i) {
+        double silhouete_of_cluster = 0;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            double silhouete_of_item = 0;
+            double a = 0;
+            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
+                //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+                auto iterator_to_calculatedDistances = calculatedDistances.find(
+                        make_pair((int) clusters[i].indexes[item], (int) clusters[i].indexes[item_in_cluster]));
+                if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+                    double temp_dist = Dtw(curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                           curvesVector.itemValues[clusters[i].indexes[item_in_cluster]].second, foo);
+                    a += temp_dist;
+                    calculatedDistances[make_pair((int) clusters[i].indexes[item],
+                                                  (int) clusters[i].indexes[item_in_cluster])] = temp_dist;
+                } else {
+                    a += iterator_to_calculatedDistances->second;
+                }
+            }
+            a /= clusters[i].ItemIDs.size();
+            unsigned int second_best_cluster = i;
+            double min = numeric_limits<double>::max();
+            for (unsigned int cluster = 0; cluster < k; cluster++) {
+                if (cluster == i)
+                    continue;
+                double temp = Dtw(curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                  clusters[cluster].centroidCoordinates, foo);
+                if (min > temp) {
+                    min = temp;
+                    second_best_cluster = cluster;
+                }
+            }
+
+            double b = 0;
+            for (unsigned long item_in_cluster = 0;
+                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
+                //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+                auto iterator_to_calculatedDistances = calculatedDistances.find(
+                        make_pair((int) clusters[i].indexes[item],
+                                  (int) clusters[second_best_cluster].indexes[item_in_cluster]));
+                if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+                    double temp_dist = Dtw(curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                           curvesVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second,
+                                           foo);
+                    b += temp_dist;
+                    calculatedDistances[make_pair((int) clusters[i].indexes[item],
+                                                  (int) clusters[second_best_cluster].indexes[item_in_cluster])] = temp_dist;
+                } else {
+                    b += iterator_to_calculatedDistances->second;
+                }
+            }
+            b /= clusters[second_best_cluster].ItemIDs.size();
+            silhouete_of_item = b - a;
+            if (b > a)
+                silhouete_of_item /= b;
+            else
+                silhouete_of_item /= a;
+            silhouete_of_cluster += silhouete_of_item;
+        }
+        silhouete_of_cluster /= clusters[i].ItemIDs.size();
+        silhouete_total += silhouete_of_cluster;
+        cout << silhouete_of_cluster << ",";
+    }
+    silhouete_total /= k;
+    cout << " " << silhouete_total << "]" << endl;
 
 }
 

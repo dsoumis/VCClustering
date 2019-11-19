@@ -32,5 +32,7 @@ public:
                                 bool const &input); //for curves
 
     void printVector();
+
+    void maxCoordFinder(double &max);
 };
 #endif

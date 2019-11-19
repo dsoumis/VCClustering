@@ -23,6 +23,9 @@ public:
     ExactNeighboursVector(InputGenericVector<inputData> const &pointsVector,
                           InputGenericVector<inputData> const &queriesVector, bool input);
 
+    ExactNeighboursVector(vector<vector<double>> const &pointsVector, vector<vector<double>> const &queriesVector,
+                          bool input);
+
     void printNeighborsToFile();
 
     double wCalculator();

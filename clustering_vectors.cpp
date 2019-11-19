@@ -202,9 +202,25 @@ VectorClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const 
                 }
                 temp[j] = temp[j] / (int) clusters[i].indexes.size();
             }
-        } else
+        } else {
             //Assign randomly the coordinates of a point of pointVector
-            temp = pointsVector.itemValues[generateNumberV(0, (int) pointsVector.itemValues.size() - 1)].second;
+            int randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
+
+            //Check if random value already exists in the centers
+            while (true) {
+                for (unsigned int cluster = 0; cluster < k; ++cluster) {
+                    if (centers[cluster].first == pointsVector.itemValues[randomIndex].first) {
+                        randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
+                        continue;
+                    }
+                }
+                break;
+            }
+            centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            unchangedCenters = false;
+            continue;
+        }
         if (temp != centers[i].second) {
             unchangedCenters = false;
             centers[i].first = "OutofDataset";
@@ -265,6 +281,7 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
                                               unsigned int const &whichAssignment,
                                               unsigned int const &whichUpdate) {
     k = k_given;
+    auto start = std::chrono::system_clock::now();
     if (whichInitialization == 1)
         InitializationSimplest(pointsVector);
     else
@@ -289,6 +306,9 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
             UpdateALaLoyd(pointsVector, unchangedCenters);
 
     }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> clustering_duration = end - start;
+
     if (whichAssignment == 2)
         free(lsh);
     for (unsigned int i = 0; i < k; ++i) {
@@ -310,6 +330,9 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
 //            }
 //            cout<<endl;
     }
+
+
+    cout << "Clustering_time: " << clustering_duration.count() << endl;
 
     double silhouete_total = 0;
     cout << "Silhouette: [";
@@ -354,7 +377,7 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
         silhouete_total += silhouete_of_cluster;
         cout << silhouete_of_cluster << ",";
     }
-    silhouete_total /= pointsVector.itemValues.size();
+    silhouete_total /= k;
     cout << " " << silhouete_total << "]" << endl;
 }
 
