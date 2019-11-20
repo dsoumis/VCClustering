@@ -97,9 +97,9 @@ VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputDa
         for (unsigned int numberHashtable = 0; numberHashtable < lsh->L; numberHashtable++) {
             unsigned int g = lsh->hashFunctions[numberHashtable].gCalculator(pointsVector.itemValues[i].second,
                                                                              (unsigned int) lsh->k_vec, w);
-            lsh->hashTables->insertHashtable(numberHashtable, g, pointsVector.itemValues[i], i);
+            lsh->hashTables->insertHashtable(numberHashtable, g, i);
         }
-        assignedItems[pointsVector.itemValues[i].first] = make_tuple(-1, -1, i);
+        assignedItems[i] = make_pair(-1, -1);
     }
     cout << "komple " << assignedItems.size() << endl;
 }
@@ -124,7 +124,7 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
         for (unsigned int i = 0; i < k; ++i) {
 
             lsh->hashTables->rangeSearch(centers[i], lsh->radius, lsh->hashFunctions, (unsigned int) lsh->k_vec,
-                                         lsh->w, clusters, i, assignedItems);
+                                         lsh->w, clusters, i, assignedItems, pointsVector);
 
             clusters[i].centroid = centers[i].first;
             clusters[i].centroidCoordinates = centers[i].second;
@@ -140,10 +140,10 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
     //Assign the points which were not assigned by range search
     for (auto itr = assignedItems.begin(); itr != assignedItems.end(); itr++) {
         if (get<0>(itr->second) == -1) {
-            double min = manhattanDistance(pointsVector.itemValues[get<2>(itr->second)].second, centers[0].second);
+            double min = manhattanDistance(pointsVector.itemValues[itr->first].second, centers[0].second);
             unsigned int minCentroidIndex = 0;
             for (unsigned int centroid = 1; centroid < k; ++centroid) {
-                double distance_from_centroid = manhattanDistance(pointsVector.itemValues[get<2>(itr->second)].second,
+                double distance_from_centroid = manhattanDistance(pointsVector.itemValues[itr->first].second,
                                                                   centers[centroid].second);
                 if (min > distance_from_centroid) {
                     min = distance_from_centroid;
@@ -151,8 +151,8 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
                 }
             }
 
-            clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[get<2>(itr->second)].first);
-            clusters[minCentroidIndex].indexes.push_back(get<2>(itr->second));
+            clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[itr->first].first);
+            clusters[minCentroidIndex].indexes.push_back(itr->first);
         } else {
             //Unassign points for new centers
             get<0>(itr->second) = -1;

@@ -51,8 +51,9 @@ private:
 
     LSH *lsh;
     //Unordered map of itemIDs
-    //tuple of index of cluster assigned to, distance from centroid of cluster and index in pointsVector
-    unordered_map<string, tuple<int, double, int>> assignedItems;
+    //key is index in curvesVector
+    //pair of index of cluster assigned to, distance from centroid of cluster
+    unordered_map<int, pair<int, double>> assignedItems;
     vector<struct cluster<inputData>> clusters;
 
     void InitializationSimplest(InputGenericVector<inputData> const &pointsVector);

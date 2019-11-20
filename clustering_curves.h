@@ -16,12 +16,14 @@
 #include "ClusterStructure.h"
 #include "Dtw.h"
 #include "GridImplementation.h"
+#include "HashPair.h"
 using namespace std;
 
 template<class inputData>
 class CurveClustering {
 private:
     unsigned int k;
+    //Centers consist of a string ItemID the vector of this item and its index in curvesVector. If the item is out of dataset ItemID="OutOfDataset" and index=-1
     vector<tuple<string, vector<inputData>, int>> centers;
 
     unsigned int maxCurveSize, minCurveSize;
@@ -31,14 +33,7 @@ private:
     //Will be used to save the distances between vectors and save a lot of time when there is a demand of recalculating.
     //New hashing because unordered map can't support pairs
     //The key to unordered map are the indexes in curvesVector
-    struct hash_pair {
-        template<class T1, class T2>
-        size_t operator()(const pair<T1, T2> &p) const {
-            auto hash1 = hash<T1>{}(p.first);
-            auto hash2 = hash<T2>{}(p.second);
-            return hash1 ^ hash2;
-        }
-    };
+
 
     unordered_map<pair<int, int>, double, hash_pair> calculatedDistances;
 
@@ -96,9 +91,12 @@ private:
     LSH *lsh;
 
     //Unordered map of itemIDs
-    //tuple of index of cluster assigned to, distance from centroid of cluster and index in curvesVector
-    unordered_map<string, tuple<int, double, int>> assignedItems;
+    //key is index in curvesVector
+    //pair of index of cluster assigned to, distance from centroid of cluster
+    unordered_map<int, pair<int, double>> assignedItems;
 
+    double fast_distance_calculationC(int const &index1, int const &index2, vector<inputData> const &item1,
+                                      vector<inputData> const &item2);
 
     void InitializationSimplest(InputGenericVector<inputData> const &curvesVector);
 
