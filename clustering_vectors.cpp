@@ -22,6 +22,22 @@ VectorClustering<inputData>::manhattanDistance(vector<inputData> const &point, v
 }
 
 template<class inputData>
+inline double VectorClustering<inputData>::fast_distance_calculationV(int const &index1, int const &index2,
+                                                                      vector<inputData> const &item1,
+                                                                      vector<inputData> const &item2) {
+
+    //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+    auto iterator_to_calculatedDistances = calculatedDistances.find(make_pair(index1, index2));
+    if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+        double temp_dist = manhattanDistance(item1, item2);
+        if (index1 != -1 && index2 != -1)
+            calculatedDistances[make_pair(index1, index2)] = temp_dist;
+        return temp_dist;
+    } else {
+        return iterator_to_calculatedDistances->second;
+    }
+}
+template<class inputData>
 void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<inputData> const &pointsVector) {
     centers.resize(k);
     //We will use an unordered map so if a random value has been already selected to select another one
@@ -33,8 +49,9 @@ void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<inpu
             randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
         }
         alreadySelectedRandom[randomIndex] = true;
-        centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
-        centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+        get<0>(centers[i]) = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+        get<1>(centers[i]) = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+        get<2>(centers[i]) = randomIndex;
     }
 }
 
@@ -47,19 +64,21 @@ void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<inputDat
     clusters.resize(k);
     //Assignment:For each point we find the nearest center using l1 metric(manhattan distance)
     for (unsigned long point = 0; point < pointsVector.itemValues.size(); ++point) {
-        double min = manhattanDistance(pointsVector.itemValues[point].second, centers[0].second);
+        double min = fast_distance_calculationV(point, get<2>(centers[0]), pointsVector.itemValues[point].second,
+                                                get<1>(centers[0]));
         unsigned int minCentroidIndex = 0;
         for (unsigned int centroid = 1; centroid < k; ++centroid) {
-            double distance_from_centroid = manhattanDistance(pointsVector.itemValues[point].second,
-                                                              centers[centroid].second);
+            double distance_from_centroid = fast_distance_calculationV(point, get<2>(centers[centroid]),
+                                                                       pointsVector.itemValues[point].second,
+                                                                       get<1>(centers[centroid]));
             if (min > distance_from_centroid) {
                 min = distance_from_centroid;
                 minCentroidIndex = centroid;
             }
         }
 
-        clusters[minCentroidIndex].centroid = centers[minCentroidIndex].first;
-        clusters[minCentroidIndex].centroidCoordinates = centers[minCentroidIndex].second;
+        clusters[minCentroidIndex].centroid = get<0>(centers[minCentroidIndex]);
+        clusters[minCentroidIndex].centroidCoordinates = get<1>(centers[minCentroidIndex]);
         clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[point].first);
         clusters[minCentroidIndex].indexes.push_back(point);
     }
@@ -81,7 +100,8 @@ VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputDa
     for (unsigned int i = 0; i < k; ++i) {
         for (unsigned int j = 0; j < k; ++j) {
             if (i != j) {
-                double temp = manhattanDistance(centers[i].second, centers[j].second);
+                double temp = fast_distance_calculationV(get<2>(centers[i]), get<2>(centers[j]), get<1>(centers[i]),
+                                                         get<1>(centers[j]));
                 if (temp < radius)
                     radius = temp;
             }
@@ -124,10 +144,10 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
         for (unsigned int i = 0; i < k; ++i) {
 
             lsh->hashTables->rangeSearch(centers[i], lsh->radius, lsh->hashFunctions, (unsigned int) lsh->k_vec,
-                                         lsh->w, clusters, i, assignedItems, pointsVector);
+                                         lsh->w, clusters, i, assignedItems, pointsVector, calculatedDistances);
 
-            clusters[i].centroid = centers[i].first;
-            clusters[i].centroidCoordinates = centers[i].second;
+            clusters[i].centroid = get<0>(centers[i]);
+            clusters[i].centroidCoordinates = get<1>(centers[i]);
             clustered_items = 0;
             for (unsigned int cluster = 0; cluster < k; ++cluster) {
                 clustered_items += clusters[cluster].ItemIDs.size();
@@ -140,17 +160,20 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
     //Assign the points which were not assigned by range search
     for (auto itr = assignedItems.begin(); itr != assignedItems.end(); itr++) {
         if (get<0>(itr->second) == -1) {
-            double min = manhattanDistance(pointsVector.itemValues[itr->first].second, centers[0].second);
+            double min = fast_distance_calculationV(itr->first, get<2>(centers[0]),
+                                                    pointsVector.itemValues[itr->first].second, get<1>(centers[0]));
             unsigned int minCentroidIndex = 0;
             for (unsigned int centroid = 1; centroid < k; ++centroid) {
-                double distance_from_centroid = manhattanDistance(pointsVector.itemValues[itr->first].second,
-                                                                  centers[centroid].second);
+                double distance_from_centroid = fast_distance_calculationV(itr->first, get<2>(centers[centroid]),
+                                                                           pointsVector.itemValues[itr->first].second,
+                                                                           get<1>(centers[centroid]));
                 if (min > distance_from_centroid) {
                     min = distance_from_centroid;
                     minCentroidIndex = centroid;
                 }
             }
-
+            clusters[minCentroidIndex].centroid = get<0>(centers[minCentroidIndex]);
+            clusters[minCentroidIndex].centroidCoordinates = get<1>(centers[minCentroidIndex]);
             clusters[minCentroidIndex].ItemIDs.push_back(pointsVector.itemValues[itr->first].first);
             clusters[minCentroidIndex].indexes.push_back(itr->first);
         } else {
@@ -209,22 +232,24 @@ VectorClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const 
             //Check if random value already exists in the centers
             while (true) {
                 for (unsigned int cluster = 0; cluster < k; ++cluster) {
-                    if (centers[cluster].first == pointsVector.itemValues[randomIndex].first) {
+                    if (get<0>(centers[cluster]) == pointsVector.itemValues[randomIndex].first) {
                         randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
                         continue;
                     }
                 }
                 break;
             }
-            centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
-            centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            get<0>(centers[i]) = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            get<1>(centers[i]) = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            get<2>(centers[i]) = randomIndex;
             unchangedCenters = false;
             continue;
         }
-        if (temp != centers[i].second) {
+        if (temp != get<1>(centers[i])) {
             unchangedCenters = false;
-            centers[i].first = "OutofDataset";
-            centers[i].second = temp;
+            get<0>(centers[i]) = "OutofDataset";
+            get<1>(centers[i]) = temp;
+            get<2>(centers[i]) = -1;
         }
     }
 }
@@ -239,8 +264,9 @@ VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &
         for (unsigned long no_index1 = 0; no_index1 < clusters[i].indexes.size(); ++no_index1) {
             double temp_sum = 0;
             for (auto index2:clusters[i].indexes) {
-                temp_sum += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[no_index1]].second,
-                                              pointsVector.itemValues[index2].second);
+                temp_sum += fast_distance_calculationV(clusters[i].indexes[no_index1], index2,
+                                                       pointsVector.itemValues[clusters[i].indexes[no_index1]].second,
+                                                       pointsVector.itemValues[index2].second);
             }
             if (min_sum > temp_sum) {
                 min_sum = temp_sum;
@@ -255,26 +281,167 @@ VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &
             //Check if random value already exists in the centers
             while (true) {
                 for (unsigned int cluster = 0; cluster < k; ++cluster) {
-                    if (centers[cluster].first == pointsVector.itemValues[randomIndex].first) {
+                    if (get<0>(centers[cluster]) == pointsVector.itemValues[randomIndex].first) {
                         randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
                         continue;
                     }
                 }
                 break;
             }
-            centers[i].first = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
-            centers[i].second = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            get<0>(centers[i]) = pointsVector.itemValues[randomIndex].first; //Assign randomly the ItemID of a point of pointVector
+            get<1>(centers[i]) = pointsVector.itemValues[randomIndex].second; //Assign randomly the coordinates of a point of pointVector
+            get<2>(centers[i]) = randomIndex;
             unchangedCenters = false;
             continue;
         }
-        if (pointsVector.itemValues[min_index].second != centers[i].second) {
+        if (pointsVector.itemValues[min_index].second != get<1>(centers[i])) {
             unchangedCenters = false;
-            centers[i].first = pointsVector.itemValues[min_index].first;
-            centers[i].second = pointsVector.itemValues[min_index].second;
+            get<0>(centers[i]) = pointsVector.itemValues[min_index].first;
+            get<1>(centers[i]) = pointsVector.itemValues[min_index].second;
+            get<2>(centers[i]) = min_index;
         }
 
     }
 }
+
+template<class inputData>
+void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &pointsVector) {
+    double silhouete_total = 0;
+    cout << "Silhouette: [";
+    for (
+            unsigned int i = 0;
+            i < k;
+            ++i) {
+        double silhouete_of_cluster = 0;
+        for (
+                unsigned long item = 0;
+                item < clusters[i].ItemIDs.
+
+                        size();
+
+                ++item) {
+            double silhouete_of_item = 0;
+            double a = 0;
+            for (
+                    unsigned long item_in_cluster = 0;
+                    item_in_cluster < clusters[i].ItemIDs.
+
+                            size();
+
+                    ++item_in_cluster) {
+                if (item == item_in_cluster)
+                    continue;
+                a +=
+                        fast_distance_calculationV(clusters[i]
+                                                           .indexes[item], clusters[i].indexes[item_in_cluster],
+                                                   pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                   pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
+            }
+            if (clusters[i].ItemIDs.
+
+                    size()
+
+                > 1)
+                a /= clusters[i].ItemIDs.
+
+                        size()
+
+                     - 1;
+            unsigned int second_best_cluster = i;
+            double min = numeric_limits<double>::max();
+            for (
+                    unsigned int cluster = 0;
+                    cluster < k;
+                    cluster++) {
+                if (cluster == i || clusters[cluster].ItemIDs.
+
+                        empty()
+
+                        )
+                    continue;
+                double temp = manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                clusters[cluster].centroidCoordinates);
+                if (min > temp) {
+                    min = temp;
+                    second_best_cluster = cluster;
+                }
+            }
+
+            double b = 0;
+            for (
+                    unsigned long item_in_cluster = 0;
+                    item_in_cluster < clusters[second_best_cluster].ItemIDs.
+
+                            size();
+
+                    ++item_in_cluster) {
+                b +=
+                        fast_distance_calculationV(clusters[i]
+                                                           .indexes[item], second_best_cluster,
+                                                   pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                   pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
+            }
+            if (!clusters[second_best_cluster].ItemIDs.
+
+                    empty()
+
+                    )
+                b /= clusters[second_best_cluster].ItemIDs.
+
+                        size();
+
+            silhouete_of_item = b - a;
+            if (b > a)
+                silhouete_of_item /=
+                        b;
+            else
+                silhouete_of_item /=
+                        a;
+            silhouete_of_cluster +=
+                    silhouete_of_item;
+        }
+        if (!clusters[i].ItemIDs.
+
+                empty()
+
+                )
+            silhouete_of_cluster /= clusters[i].ItemIDs.
+
+                    size();
+
+        silhouete_total +=
+                silhouete_of_cluster;
+        cout << silhouete_of_cluster << ",";
+    }
+    silhouete_total /=
+            k;
+    cout << " " << silhouete_total << "]" <<
+         endl;
+}
+
+template<class inputData>
+void VectorClustering<inputData>::Printing() {
+    for (unsigned int i = 0; i < k; ++i) {
+        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
+//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
+//                cout<<clusters[i].centroidCoordinates[item]<<" ";
+//            }
+//            cout<<endl;
+//            cout<<"Items"<<endl;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            if (item == clusters[i].ItemIDs.size() - 1) {
+                cout << clusters[i].ItemIDs[item] << "}" << endl;
+            } else
+                cout << clusters[i].ItemIDs[item] << ", ";
+        }
+//            cout<<"Indexes"<<endl;
+//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
+//                cout<<clusters[i].indexes[item]<<" ";
+//            }
+//            cout<<endl;
+    }
+}
+
 template<class inputData>
 VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                                               unsigned int const &whichInitialization,
@@ -311,74 +478,13 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
 
     if (whichAssignment == 2)
         free(lsh);
-    for (unsigned int i = 0; i < k; ++i) {
-        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
-//                cout<<clusters[i].centroidCoordinates[item]<<" ";
-//            }
-//            cout<<endl;
-//            cout<<"Items"<<endl;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            if (item == clusters[i].ItemIDs.size() - 1) {
-                cout << clusters[i].ItemIDs[item] << "}" << endl;
-            } else
-                cout << clusters[i].ItemIDs[item] << ", ";
-        }
-//            cout<<"Indexes"<<endl;
-//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
-//                cout<<clusters[i].indexes[item]<<" ";
-//            }
-//            cout<<endl;
-    }
 
+    Printing();
 
     cout << "Clustering_time: " << clustering_duration.count() << endl;
 
-    double silhouete_total = 0;
-    cout << "Silhouette: [";
-    for (unsigned int i = 0; i < k; ++i) {
-        double silhouete_of_cluster = 0;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            double silhouete_of_item = 0;
-            double a = 0;
-            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
-                a += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
-                                       pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
-            }
-            a /= clusters[i].ItemIDs.size();
-            unsigned int second_best_cluster = i;
-            double min = numeric_limits<double>::max();
-            for (unsigned int cluster = 0; cluster < k; cluster++) {
-                if (cluster == i)
-                    continue;
-                double temp = manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
-                                                clusters[cluster].centroidCoordinates);
-                if (min > temp) {
-                    min = temp;
-                    second_best_cluster = cluster;
-                }
-            }
+    Silhouette(pointsVector);
 
-            double b = 0;
-            for (unsigned long item_in_cluster = 0;
-                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
-                b += manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
-                                       pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
-            }
-            b /= clusters[second_best_cluster].ItemIDs.size();
-            silhouete_of_item = b - a;
-            if (b > a)
-                silhouete_of_item /= b;
-            else
-                silhouete_of_item /= a;
-            silhouete_of_cluster += silhouete_of_item;
-        }
-        silhouete_of_cluster /= clusters[i].ItemIDs.size();
-        silhouete_total += silhouete_of_cluster;
-        cout << silhouete_of_cluster << ",";
-    }
-    silhouete_total /= k;
-    cout << " " << silhouete_total << "]" << endl;
 }
 
 template

@@ -203,6 +203,8 @@ void CurveClustering<inputData>::ReverseAssignment(InputGenericVector<inputData>
                 }
             }
 
+            clusters[minCentroidIndex].centroid = get<0>(centers[minCentroidIndex]);
+            clusters[minCentroidIndex].centroidCoordinates = get<1>(centers[minCentroidIndex]);
             clusters[minCentroidIndex].ItemIDs.push_back(curvesVector.itemValues[itr->first].first);
             clusters[minCentroidIndex].indexes.push_back(itr->first);
         } else {
@@ -411,6 +413,89 @@ CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &c
     }
 }
 
+
+template<class inputData>
+void CurveClustering<inputData>::Silhouette(InputGenericVector<inputData> &curvesVector) {
+    double silhouete_total = 0;
+    vector<vector<Cell>> foo;
+    cout << "Silhouette: [";
+    for (unsigned int i = 0; i < k; ++i) {
+        double silhouete_of_cluster = 0;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            double silhouete_of_item = 0;
+            double a = 0;
+            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
+                if (item == item_in_cluster)
+                    continue;
+                a += fast_distance_calculationC(clusters[i].indexes[item], clusters[i].indexes[item_in_cluster],
+                                                curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                                curvesVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
+            }
+            if (clusters[i].ItemIDs.size() > 1)
+                a /= clusters[i].ItemIDs.size() - 1;
+            unsigned int second_best_cluster = i;
+            double min = numeric_limits<double>::max();
+            for (unsigned int cluster = 0; cluster < k; cluster++) {
+                if (cluster == i || clusters[cluster].ItemIDs.empty())
+                    continue;
+                double temp = Dtw(curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                  clusters[cluster].centroidCoordinates, foo);
+                if (min > temp) {
+                    min = temp;
+                    second_best_cluster = cluster;
+                }
+            }
+
+            double b = 0;
+            for (unsigned long item_in_cluster = 0;
+                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
+                b += fast_distance_calculationC(clusters[i].indexes[item],
+                                                clusters[second_best_cluster].indexes[item_in_cluster],
+                                                curvesVector.itemValues[clusters[i].indexes[item]].second,
+                                                curvesVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
+
+            }
+            if (!clusters[second_best_cluster].ItemIDs.empty())
+                b /= clusters[second_best_cluster].ItemIDs.size();
+            silhouete_of_item = b - a;
+            if (b > a)
+                silhouete_of_item /= b;
+            else
+                silhouete_of_item /= a;
+            silhouete_of_cluster += silhouete_of_item;
+        }
+        if (!clusters[i].ItemIDs.empty())
+            silhouete_of_cluster /= clusters[i].ItemIDs.size();
+        silhouete_total += silhouete_of_cluster;
+        cout << silhouete_of_cluster << ",";
+    }
+    silhouete_total /= k;
+    cout << " " << silhouete_total << "]" << endl;
+}
+
+template<class inputData>
+void CurveClustering<inputData>::Printing() {
+    for (unsigned int i = 0; i < k; ++i) {
+        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
+//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
+//                cout<<clusters[i].centroidCoordinates[item]<<" ";
+//            }
+//            cout<<endl;
+//            cout<<"Items"<<endl;
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+            if (item == clusters[i].ItemIDs.size() - 1) {
+                cout << clusters[i].ItemIDs[item] << "}" << endl;
+            } else
+                cout << clusters[i].ItemIDs[item] << ", ";
+        }
+//            cout<<"Indexes"<<endl;
+//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
+//                cout<<clusters[i].indexes[item]<<" ";
+//            }
+//            cout<<endl;
+    }
+}
+
 template<class inputData>
 CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
                                             unsigned int const &maxSize, unsigned int const &minSize,
@@ -452,83 +537,12 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
 
     if (whichAssignment == 2)
         free(lsh);
-    for (unsigned int i = 0; i < k; ++i) {
-        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
-//                cout<<clusters[i].centroidCoordinates[item]<<" ";
-//            }
-//            cout<<endl;
-//            cout<<"Items"<<endl;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            if (item == clusters[i].ItemIDs.size() - 1) {
-                cout << clusters[i].ItemIDs[item] << "}" << endl;
-            } else
-                cout << clusters[i].ItemIDs[item] << ", ";
-        }
-//            cout<<"Indexes"<<endl;
-//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
-//                cout<<clusters[i].indexes[item]<<" ";
-//            }
-//            cout<<endl;
-    }
 
+    Printing();
 
     cout << "Clustering_time: " << clustering_duration.count() << endl;
 
-    double silhouete_total = 0;
-    vector<vector<Cell>> foo;
-    cout << "Silhouette: [";
-    for (unsigned int i = 0; i < k; ++i) {
-        double silhouete_of_cluster = 0;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            double silhouete_of_item = 0;
-            double a = 0;
-            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
-                if (item == item_in_cluster)
-                    continue;
-                a += fast_distance_calculationC(clusters[i].indexes[item], clusters[i].indexes[item_in_cluster],
-                                                curvesVector.itemValues[clusters[i].indexes[item]].second,
-                                                curvesVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
-            }
-            if (clusters[i].ItemIDs.size() > 1)
-                a /= clusters[i].ItemIDs.size() - 1;
-            unsigned int second_best_cluster = i;
-            double min = numeric_limits<double>::max();
-            for (unsigned int cluster = 0; cluster < k; cluster++) {
-                if (cluster == i)
-                    continue;
-                double temp = Dtw(curvesVector.itemValues[clusters[i].indexes[item]].second,
-                                  clusters[cluster].centroidCoordinates, foo);
-                if (min > temp) {
-                    min = temp;
-                    second_best_cluster = cluster;
-                }
-            }
-
-            double b = 0;
-            for (unsigned long item_in_cluster = 0;
-                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
-                b += fast_distance_calculationC(clusters[i].indexes[item],
-                                                clusters[second_best_cluster].indexes[item_in_cluster],
-                                                curvesVector.itemValues[clusters[i].indexes[item]].second,
-                                                curvesVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
-
-            }
-            if (!clusters[second_best_cluster].ItemIDs.empty())
-                b /= clusters[second_best_cluster].ItemIDs.size();
-            silhouete_of_item = b - a;
-            if (b > a)
-                silhouete_of_item /= b;
-            else
-                silhouete_of_item /= a;
-            silhouete_of_cluster += silhouete_of_item;
-        }
-        silhouete_of_cluster /= clusters[i].ItemIDs.size();
-        silhouete_total += silhouete_of_cluster;
-        cout << silhouete_of_cluster << ",";
-    }
-    silhouete_total /= k;
-    cout << " " << silhouete_total << "]" << endl;
+    Silhouette(curvesVector);
 
 }
 

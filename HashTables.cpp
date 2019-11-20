@@ -59,12 +59,13 @@ inline double Dtw(vector<pair<double, double>> const &p, vector<pair<double, dou
 
 template<>
 void
-HashTables<int>::rangeSearch(pair<string, vector<int >> &query, double radius,
-                             vector<HashFunctions<int>> hashFunctions, unsigned int const &k,
+HashTables<int>::rangeSearch(tuple<string, vector<int>, int> &query, double radius,
+                             vector<HashFunctions<int>> &hashFunctions, unsigned int const &k,
                              double const &w,
                              vector<struct cluster<int>> &clusters, int const &index,
                              unordered_map<int, pair<int, double>> &assignedItems,
-                             InputGenericVector<int> const &pointsVector) {
+                             InputGenericVector<int> const &pointsVector,
+                             unordered_map<pair<int, int>, double, hash_pair> &calculatedDistances) {
 
     //int is the index of the point in pointsVector
     unordered_map<int, bool> alreadyInThisCluster;
@@ -72,7 +73,7 @@ HashTables<int>::rangeSearch(pair<string, vector<int >> &query, double radius,
     //for i from 1 to L do
     for (unsigned long i = 0; i < hashTables.size(); i++) {
         //cout<<"pame pali "<<query.first<<endl;
-        unsigned int g = hashFunctions[i].gCalculator(query.second, k, w);
+        unsigned int g = hashFunctions[i].gCalculator(get<1>(query), k, w);
         //for each item p in bucket gi(q) do
         for (auto p = hashTables[i].equal_range(g).first; p != hashTables[i].equal_range(g).second; p++) {
 //            //if large number of retrieved items (e.g.>100L) then Break
@@ -81,7 +82,17 @@ HashTables<int>::rangeSearch(pair<string, vector<int >> &query, double radius,
 
             allBucketsEmpty = false;
             //if dist(q,p) is within radius save the range neighbor
-            double dist = manhattanDistance(pointsVector.itemValues[p->second].second, query.second);
+            double dist;
+            //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+            auto iterator_to_calculatedDistances = calculatedDistances.find(make_pair(p->second, get<2>(query)));
+            if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+                double temp_dist = manhattanDistance(pointsVector.itemValues[p->second].second, get<1>(query));
+                if (p->second != -1 && get<2>(query) != -1)
+                    calculatedDistances[make_pair(p->second, get<2>(query))] = temp_dist;
+                dist = temp_dist;
+            } else {
+                dist = iterator_to_calculatedDistances->second;
+            }
             //cout<<"shmeio "<<get<0>(p->second)<<" apostasi " << dist<<endl;
             if (dist <= radius && alreadyInThisCluster.find(p->second) == alreadyInThisCluster.end()) {
 
@@ -131,12 +142,13 @@ HashTables<int>::rangeSearch(pair<string, vector<int >> &query, double radius,
 
 template<>
 void
-HashTables<double>::rangeSearch(pair<string, vector<double >> &query, double radius,
-                                vector<HashFunctions<double>> hashFunctions, unsigned int const &k,
+HashTables<double>::rangeSearch(tuple<string, vector<double>, int> &query, double radius,
+                                vector<HashFunctions<double>> &hashFunctions, unsigned int const &k,
                                 double const &w,
                                 vector<struct cluster<double>> &clusters, int const &index,
                                 unordered_map<int, pair<int, double>> &assignedItems,
-                                InputGenericVector<double> const &pointsVector) {
+                                InputGenericVector<double> const &pointsVector,
+                                unordered_map<pair<int, int>, double, hash_pair> &calculatedDistances) {
 
     //int is the index of the point in pointsVector
     unordered_map<int, bool> alreadyInThisCluster;
@@ -144,7 +156,7 @@ HashTables<double>::rangeSearch(pair<string, vector<double >> &query, double rad
     //for i from 1 to L do
     for (unsigned long i = 0; i < hashTables.size(); i++) {
         //cout<<"pame pali "<<query.first<<endl;
-        unsigned int g = hashFunctions[i].gCalculator(query.second, k, w);
+        unsigned int g = hashFunctions[i].gCalculator(get<1>(query), k, w);
         //for each item p in bucket gi(q) do
         for (auto p = hashTables[i].equal_range(g).first; p != hashTables[i].equal_range(g).second; p++) {
 //            //if large number of retrieved items (e.g.>100L) then Break
@@ -153,7 +165,19 @@ HashTables<double>::rangeSearch(pair<string, vector<double >> &query, double rad
 
             allBucketsEmpty = false;
             //if dist(q,p) is within radius save the range neighbor
-            double dist = manhattanDistance(pointsVector.itemValues[p->second].second, query.second);
+            double dist;
+            //Check if we had already calculated this distance somewhere so we have it saved and don't need to recalculate it
+            auto iterator_to_calculatedDistances = calculatedDistances.find(make_pair(p->second, get<2>(query)));
+            if (iterator_to_calculatedDistances == calculatedDistances.end()) {
+                double temp_dist = manhattanDistance(pointsVector.itemValues[p->second].second, get<1>(query));
+                if (p->second != -1 && get<2>(query) != -1)
+                    calculatedDistances[make_pair(p->second, get<2>(query))] = temp_dist;
+                dist = temp_dist;
+            } else {
+                dist = iterator_to_calculatedDistances->second;
+            }
+
+
             //cout<<"shmeio "<<get<0>(p->second)<<" apostasi " << dist<<endl;
             if (dist <= radius && alreadyInThisCluster.find(p->second) == alreadyInThisCluster.end()) {
 

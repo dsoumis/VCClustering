@@ -4,10 +4,10 @@
 #include "clustering_curves.h"
 #include "Dtw.h"
 #define whichInitialization 1
-#define whichAssignment 2
-#define whichUpdate 2
+#define whichAssignment 1
+#define whichUpdate 1
 int main() {
-    bool isVectors = true;
+    bool isVectors = false;
     unsigned int k = 5;
     if (isVectors) {
         InputGenericVector<int> pointsVector(

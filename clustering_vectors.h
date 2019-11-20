@@ -14,13 +14,14 @@
 #include "HashTables.h"
 #include "BruteForceImplementation.h"
 #include "ClusterStructure.h"
+#include "HashPair.h"
 using namespace std;
 
 template<class inputData>
 class VectorClustering {
 private:
     unsigned int k;
-    vector<pair<string, vector<inputData>>> centers;
+    vector<tuple<string, vector<inputData>, int>> centers;
 
     class LSH {
     public:
@@ -55,6 +56,10 @@ private:
     //pair of index of cluster assigned to, distance from centroid of cluster
     unordered_map<int, pair<int, double>> assignedItems;
     vector<struct cluster<inputData>> clusters;
+    unordered_map<pair<int, int>, double, hash_pair> calculatedDistances;
+
+    double fast_distance_calculationV(int const &index1, int const &index2, vector<inputData> const &item1,
+                                      vector<inputData> const &item2);
 
     void InitializationSimplest(InputGenericVector<inputData> const &pointsVector);
 
@@ -71,6 +76,9 @@ private:
 
     void UpdateALaLoyd(InputGenericVector<inputData> const &pointsVector, bool &unchangedCenters);
 
+    void Silhouette(InputGenericVector<inputData> &pointsVector);
+
+    void Printing();
 public:
     explicit VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                               unsigned int const &whichInitialization, unsigned int const &whichAssignment,

@@ -31,11 +31,12 @@ public:
 
     void insertHashtable(unsigned int whichHashTable, unsigned int const &g, int const &index);
 
-    void rangeSearch(pair<string, vector<inputData >> &query, double radius,
-                     vector<HashFunctions<inputData>> hashFunctions, unsigned int const &k,
+    void rangeSearch(tuple<string, vector<inputData>, int> &query, double radius,
+                     vector<HashFunctions<inputData>> &hashFunctions, unsigned int const &k,
                      double const &w, vector<struct cluster<inputData>> &clusters, int const &index,
                      unordered_map<int, pair<int, double>> &assignedItems,
-                     InputGenericVector<inputData> const &pointsVector);
+                     InputGenericVector<inputData> const &pointsVector,
+                     unordered_map<pair<int, int>, double, hash_pair> &calculatedDistances);
 
     void rangeSearch(tuple<string, vector<pair<double, double>>, int> &query, double radius, unsigned int const &g,
                      vector<struct cluster<pair<double, double>>> &clusters, int const &index,

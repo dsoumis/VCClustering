@@ -116,6 +116,9 @@ private:
 
     void UpdateALaLoyd(InputGenericVector<inputData> const &curvesVector, bool &unchangedCenters);
 
+    void Silhouette(InputGenericVector<inputData> &curvesVector);
+
+    void Printing();
 public:
     explicit CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
                              unsigned int const &maxSize, unsigned int const &minSize,
