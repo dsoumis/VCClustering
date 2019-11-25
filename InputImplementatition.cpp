@@ -47,7 +47,7 @@ InputGenericVector<inputData>::InputGenericVector(string const& path){ //For inp
 
             bool itemIDflag= true;
             string word = "";
-            for (auto c:sLine ) {
+            for (auto& c:sLine ) {
                 //Push every value delimited by white space
                 if (iswspace(c)) {
                     if(!itemIDflag) { //If it is not the item's id
