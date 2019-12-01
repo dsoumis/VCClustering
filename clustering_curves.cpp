@@ -93,16 +93,6 @@ void CurveClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData
         clusters[minCentroidIndex].ItemIDs.push_back(curvesVector.itemValues[curve].first);
         clusters[minCentroidIndex].indexes.push_back(curve);
     }
-
-//    for (unsigned int i = 0; i < k; ++i) {
-//        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-//            if (item == clusters[i].ItemIDs.size() - 1) {
-//                cout << clusters[i].ItemIDs[item] << "}" << endl;
-//            } else
-//                cout << clusters[i].ItemIDs[item] << ", ";
-//        }
-//    }
 }
 
 double deltaCalculator(InputGenericVector<pair<double, double>> const &curvesVector) {
@@ -157,7 +147,7 @@ void CurveClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inp
         }
         assignedItems[curve] = make_pair(-1, -1);
     }
-    cout << "komple " << assignedItems.size() << endl;
+    cout << "Curves assigned to grids  " << assignedItems.size() << endl;
 }
 
 template<class inputData>
@@ -169,9 +159,7 @@ void CurveClustering<inputData>::ReverseAssignment(InputGenericVector<inputData>
 
     unsigned int clustered_items = 0;
     auto conditionSuccessAmount = (unsigned int) round(0.7 * curvesVector.itemValues.size());
-    cout << "success " << conditionSuccessAmount << endl;
     while (clustered_items < conditionSuccessAmount) {
-        cout << "3ana!! " << lsh->radius << " " << clustered_items << endl;
         //In 1 out of 100 times there is a possibility points to be scattered in different buckets than the center so although we increase the radius,there are not any more points in the buckets.
         //So we break the loop and bruteforce the assignment :/
         if (lsh->radius == numeric_limits<double>::infinity()) {
@@ -237,25 +225,6 @@ void CurveClustering<inputData>::ReverseAssignment(InputGenericVector<inputData>
             howmany++;
     }
 
-    //Note to me:Delete later
-//cout<<"how many "<<howmany<<endl;
-//    cout<<"clustered "<<clustered_items<<endl;
-//    clustered_items=0;
-//    for(unsigned int i=0; i<k; i++){
-//        clustered_items+=clusters[i].ItemIDs.size();
-//    }
-//    cout<<"clustered "<<clustered_items<<endl;
-//
-//    for (unsigned int i = 0; i < k; ++i) {
-//        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-//            if (item == clusters[i].ItemIDs.size() - 1) {
-//                cout << clusters[i].ItemIDs[item] << "}" << endl;
-//            } else
-//                cout << clusters[i].ItemIDs[item] << ", ";
-//        }
-//    }
-    //exit(1);
 }
 
 template<class inputData>
@@ -286,6 +255,7 @@ void CurveClustering<inputData>::InitializationUpdate(unsigned int const &cluste
                                                      1);
         //check if points after index are enough to successfully create the subsequence. index + point after it must equal lamda
         while (true) {
+
             unsigned int subsequence_lentgh = 0;
             for (unsigned long ind = randomSubsequenceIndex;
                  ind < curvesVector.itemValues[clusters[cluster_index].indexes[randomIndex]].second.size(); ++ind) {
@@ -321,7 +291,6 @@ CurveClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &
             InitializationUpdate(i, curvesVector, lamda, C);
 
             do {
-
                 C_ = C;
                 vector<vector<pair<double, double>>> A;
                 A.resize(lamda);
@@ -387,6 +356,7 @@ CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &c
     unchangedCenters = true;
     vector<vector<Cell>> foo;
     for (unsigned int i = 0; i < k; ++i) {
+        cout << "Calculating A la Loyd. Please wait.." << endl;
         double min_sum = numeric_limits<double>::max();
         int min_index = -1;
         for (unsigned long no_index1 = 0; no_index1 < clusters[i].indexes.size(); ++no_index1) {
@@ -401,7 +371,7 @@ CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &c
                 min_index = clusters[i].indexes[no_index1];
             }
         }
-        cout << "min index " << min_index << endl;
+
         //If empty cluster assign at random
         if (min_index == -1) {
             int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
@@ -435,7 +405,6 @@ CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &c
 
 template<class inputData>
 void CurveClustering<inputData>::Silhouette(InputGenericVector<inputData> &curvesVector) {
-    cout << "mpainei silhouete" << endl;
     double silhouete_total = 0;
     vector<vector<Cell>> foo;
     cout << "Silhouette: [";
@@ -494,25 +463,37 @@ void CurveClustering<inputData>::Silhouette(InputGenericVector<inputData> &curve
 }
 
 template<class inputData>
-void CurveClustering<inputData>::Printing() {
+void CurveClustering<inputData>::Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
+                                          unsigned int const &whichUpdate, bool const &complete, double const &duration,
+                                          InputGenericVector<inputData> &curvesVector) {
+    cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
-        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
-//                cout<<clusters[i].centroidCoordinates[item]<<" ";
-//            }
-//            cout<<endl;
-//            cout<<"Items"<<endl;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            if (item == clusters[i].ItemIDs.size() - 1) {
-                cout << clusters[i].ItemIDs[item] << "}" << endl;
-            } else
-                cout << clusters[i].ItemIDs[item] << ", ";
+        cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
+        if ("OutofDataset" != clusters[i].centroid)
+            cout << clusters[i].centroid;
+        else {
+            for (auto const &coord:clusters[i].centroidCoordinates)
+                cout << "(" << coord.first << "," << coord.second << ")" << " ";
         }
-//            cout<<"Indexes"<<endl;
-//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
-//                cout<<clusters[i].indexes[item]<<" ";
-//            }
-//            cout<<endl;
+        cout << "}" << endl;
+    }
+
+    cout << "Clustering_time: " << duration << endl;
+
+    Silhouette(curvesVector);
+
+    cout << endl;
+
+    if (complete) {
+        for (unsigned int i = 0; i < k; ++i) {
+            cout << "CLUSTER-" << i + 1 << " {";
+            for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+                if (item == clusters[i].ItemIDs.size() - 1) {
+                    cout << clusters[i].ItemIDs[item] << "}" << endl;
+                } else
+                    cout << clusters[i].ItemIDs[item] << ", ";
+            }
+        }
     }
 }
 
@@ -522,7 +503,7 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,
                                             unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
-                                            unsigned int const &L_grid) {
+                                            unsigned int const &L_grid, bool const &complete) {
     k = k_given;
     maxCurveSize = maxSize * 2;//Because its vector will consist of x1,y1,x2,y2,x3,y3 not in pairs
     minCurveSize = minSize;
@@ -541,30 +522,26 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
     int maxIterations = 3;
     //If the centers do not change we are done. We have the min objective function.
     while (!unchangedCenters && maxIterations-- > 0) {
-        cout << "3anampainw" << endl;
+        cout << "Working.." << endl;
+        cout << "Assigning..." << endl;
         if (whichAssignment == 1)
             AssignmentSimplest(curvesVector);
         else
             ReverseAssignment(curvesVector);
+        cout << "Updating Centers...." << endl;
         if (whichUpdate == 2)
             UpdateSimplest(curvesVector, unchangedCenters);
         else
             UpdateALaLoyd(curvesVector, unchangedCenters);
 
     }
-    cout << "den bgainw" << endl;
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> clustering_duration = end - start;
 
     if (whichAssignment == 2)
         free(lsh);
 
-    Printing();
-
-    cout << "Clustering_time: " << clustering_duration.count() << endl;
-
-    Silhouette(curvesVector);
-
+    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), curvesVector);
 }
 
 template

@@ -20,7 +20,7 @@ double ExactNeighboursVector<int>::manhattanDistance(vector<int> const &point, v
 template<>
 double ExactNeighboursVector<double>::manhattanDistance(vector<double> const &point, vector<double> const &query) {
     double distance = 0;
-    for (unsigned int i = 0; i < point.size(); i++) {
+    for (unsigned long i = 0; i < point.size(); i++) {
         distance += abs(point[i] - query[i]);
     }
     return distance;
@@ -77,7 +77,7 @@ ExactNeighboursVector<inputData>::ExactNeighboursVector(InputGenericVector<input
     }
     auto total_end = std::chrono::system_clock::now();
     std::chrono::duration<double> total_duration = total_end - total_start;
-    cout << "Time for exact neighbors through brute force: " << total_duration.count() << endl;
+    //cout << "Time for exact neighbors through brute force: " << total_duration.count() << endl;
 }
 
 template<class inputData>

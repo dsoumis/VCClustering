@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
         CurveClustering<pair<double, double>> curveClustering(curvesVector, k, maxCurveSize, minCurveSize,
                                                               whichInitialization, whichAssignment,
-                                                              whichUpdate, k_of_lsh, L_grids);
+                                                              whichUpdate, k_of_lsh, L_grids, complete);
 //        vector<vector<Cell>> C;         //2-d vector
 //        double dist = Dtw(curvesVector.itemValues[0].second, curvesVector.itemValues[1].second, C);
 //        cout << "diist " << dist << endl;

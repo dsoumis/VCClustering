@@ -106,9 +106,9 @@ void
 VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputData> &pointsVector,
                                                       int const &k_vec_given,
                                                       int const &L_given) {
-    //ExactNeighboursVector<int> inputNeighboursVector(pointsVector,pointsVector, true);
+    ExactNeighboursVector<inputData> inputNeighboursVector(pointsVector, pointsVector, true);
 
-    double w = 8436.48;//inputNeighboursVector.wCalculator();
+    double w = inputNeighboursVector.wCalculator();
     //cout<<w<<endl;
     //exit(1);
 
@@ -137,7 +137,7 @@ VectorClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputDa
         }
         assignedItems[i] = make_pair(-1, -1);
     }
-    cout << "komple " << assignedItems.size() << endl;
+    cout << "Points assigned to hash tables " << assignedItems.size() << endl;
 }
 
 template<class inputData>
@@ -149,9 +149,8 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
 
     unsigned int clustered_items = 0;
     auto conditionSuccessAmount = (unsigned int) round(0.7 * pointsVector.itemValues.size());
-    cout << "success " << conditionSuccessAmount << endl;
+
     while (clustered_items < conditionSuccessAmount) {
-        cout << "3ana!! " << lsh->radius << " " << clustered_items << endl;
         //In 1 out of 100 times there is a possibility points to be scattered in different buckets than the center so although we increase the radius,there are not any more points in the buckets.
         //So we break the loop and bruteforce the assignment :/
         if (lsh->radius == numeric_limits<double>::infinity()) {
@@ -198,32 +197,12 @@ void VectorClustering<inputData>::ReverseAssignment(InputGenericVector<inputData
             get<1>(itr->second) = -1;
         }
     }
-    //lsh->hashTables->unassignedPointsHandling(clusters,centers,k);
+
     unsigned int howmany = 0;
     for (auto itr = assignedItems.begin(); itr != assignedItems.end(); itr++) {
         if (get<0>(itr->second) != -1)
             howmany++;
     }
-
-    //Note to me:Delete later
-//cout<<"how many "<<howmany<<endl;
-//    cout<<"clustered "<<clustered_items<<endl;
-//    clustered_items=0;
-//    for(unsigned int i=0; i<k; i++){
-//        clustered_items+=clusters[i].ItemIDs.size();
-//    }
-//    cout<<"clustered "<<clustered_items<<endl;
-//
-//    for (unsigned int i = 0; i < k; ++i) {
-//        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-//            if (item == clusters[i].ItemIDs.size() - 1) {
-//                cout << clusters[i].ItemIDs[item] << "}" << endl;
-//            } else
-//                cout << clusters[i].ItemIDs[item] << ", ";
-//        }
-//    }
-    //exit(1);
 }
 
 template<class inputData>
@@ -289,7 +268,6 @@ VectorClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &
                 min_index = clusters[i].indexes[no_index1];
             }
         }
-        cout << "min index " << min_index << endl;
         //If empty cluster assign at random
         if (min_index == -1) {
             int randomIndex = generateNumberV(0, (int) pointsVector.itemValues.size() - 1);
@@ -336,27 +314,12 @@ void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &poin
                                                 pointsVector.itemValues[clusters[i].indexes[item]].second,
                                                 pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
             }
-            if (clusters[i].ItemIDs.
-
-                    size()
-
-                > 1)
-                a /= clusters[i].ItemIDs.
-
-                        size()
-
-                     - 1;
+            if (clusters[i].ItemIDs.size() > 1)
+                a /= clusters[i].ItemIDs.size() - 1;
             unsigned int second_best_cluster = i;
             double min = numeric_limits<double>::max();
-            for (
-                    unsigned int cluster = 0;
-                    cluster < k;
-                    cluster++) {
-                if (cluster == i || clusters[cluster].ItemIDs.
-
-                        empty()
-
-                        )
+            for (unsigned int cluster = 0; cluster < k; cluster++) {
+                if (cluster == i || clusters[cluster].ItemIDs.empty())
                     continue;
                 double temp = manhattanDistance(pointsVector.itemValues[clusters[i].indexes[item]].second,
                                                 clusters[cluster].centroidCoordinates);
@@ -370,39 +333,27 @@ void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &poin
             for (unsigned long item_in_cluster = 0;
                  item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
                 b += fast_distance_calculationV(clusters[i].indexes[item], second_best_cluster,
-                                                   pointsVector.itemValues[clusters[i].indexes[item]].second,
-                                                   pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
+                                                pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
             }
             if (!clusters[second_best_cluster].ItemIDs.empty())
                 b /= clusters[second_best_cluster].ItemIDs.size();
 
             silhouete_of_item = b - a;
             if (b > a)
-                silhouete_of_item /=
-                        b;
+                silhouete_of_item /= b;
             else
-                silhouete_of_item /=
-                        a;
-            silhouete_of_cluster +=
-                    silhouete_of_item;
+                silhouete_of_item /= a;
+            silhouete_of_cluster += silhouete_of_item;
         }
-        if (!clusters[i].ItemIDs.
+        if (!clusters[i].ItemIDs.empty())
+            silhouete_of_cluster /= clusters[i].ItemIDs.size();
 
-                empty()
-
-                )
-            silhouete_of_cluster /= clusters[i].ItemIDs.
-
-                    size();
-
-        silhouete_total +=
-                silhouete_of_cluster;
+        silhouete_total += silhouete_of_cluster;
         cout << silhouete_of_cluster << ",";
     }
-    silhouete_total /=
-            k;
-    cout << " " << silhouete_total << "]" <<
-         endl;
+    silhouete_total /= k;
+    cout << " " << silhouete_total << "]" << endl;
 }
 
 template<class inputData>
