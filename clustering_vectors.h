@@ -15,6 +15,7 @@
 #include "BruteForceImplementation.h"
 #include "ClusterStructure.h"
 #include "HashPair.h"
+#include "kmeansPlusPlus.h"
 using namespace std;
 
 template<class inputData>
@@ -63,6 +64,8 @@ private:
 
     void InitializationSimplest(InputGenericVector<inputData> const &pointsVector);
 
+    void InitializationKmeansPlusPlus(InputGenericVector<inputData> const &pointsVector);
+
     void AssignmentSimplest(InputGenericVector<inputData> const &pointsVector);
 
     void
@@ -78,11 +81,14 @@ private:
 
     void Silhouette(InputGenericVector<inputData> &pointsVector);
 
-    void Printing();
+    void Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
+                  unsigned int const &whichUpdate, bool const &complete, double const &duration,
+                  InputGenericVector<inputData> &pointsVector);
 public:
     explicit VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                               unsigned int const &whichInitialization, unsigned int const &whichAssignment,
-                              unsigned int const &whichUpdate);
+                              unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
+                              unsigned int const &L_hashtables, bool const &complete);
 };
 
 #endif //SECOND_STEP_CLUSTERING_VECTORS_H

@@ -17,6 +17,7 @@
 #include "Dtw.h"
 #include "GridImplementation.h"
 #include "HashPair.h"
+#include "kmeansPlusPlus.h"
 using namespace std;
 
 template<class inputData>
@@ -100,6 +101,8 @@ private:
 
     void InitializationSimplest(InputGenericVector<inputData> const &curvesVector);
 
+    void InitializationKmeansPlusPlus(InputGenericVector<inputData> const &curvesVector);
+
     void AssignmentSimplest(InputGenericVector<inputData> const &curvesVector);
 
     void
@@ -123,7 +126,7 @@ public:
     explicit CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
                              unsigned int const &maxSize, unsigned int const &minSize,
                              unsigned int const &whichInitialization, unsigned int const &whichAssignment,
-                             unsigned int const &whichUpdate);
+                             unsigned int const &whichUpdate, unsigned int const &k_of_lsh, unsigned int const &L_grid);
 };
 
 #endif //SECOND_STEP_CLUSTERING_CURVES_H

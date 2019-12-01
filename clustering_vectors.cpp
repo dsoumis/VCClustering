@@ -56,6 +56,22 @@ void VectorClustering<inputData>::InitializationSimplest(InputGenericVector<inpu
 }
 
 template<class inputData>
+void VectorClustering<inputData>::InitializationKmeansPlusPlus(InputGenericVector<inputData> const &pointsVector) {
+    vector<int> indexes;                            //vector of the places of pointsVector as centers
+    centers.resize(k);
+    chooseRandomCenter(pointsVector, indexes);
+    get<0>(centers[0]) = pointsVector.itemValues[indexes[0]].first; //Assign randomly the ItemID of a point of pointVector
+    get<1>(centers[0]) = pointsVector.itemValues[indexes[0]].second; //Assign randomly the coordinates of a point of pointVector
+    get<2>(centers[0]) = indexes[0];
+
+    for (unsigned int i = 1; i < k; i++) {
+        createNewCenter(pointsVector, indexes);
+        get<0>(centers[i]) = pointsVector.itemValues[indexes[i]].first; //Assign randomly the ItemID of a point of pointVector
+        get<1>(centers[i]) = pointsVector.itemValues[indexes[i]].second; //Assign randomly the coordinates of a point of pointVector
+        get<2>(centers[i]) = indexes[i];
+    }
+}
+template<class inputData>
 void VectorClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData> const &pointsVector) {
 
     //For each assignment erase the vector of clusters
@@ -308,34 +324,17 @@ template<class inputData>
 void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &pointsVector) {
     double silhouete_total = 0;
     cout << "Silhouette: [";
-    for (
-            unsigned int i = 0;
-            i < k;
-            ++i) {
+    for (unsigned int i = 0; i < k; ++i) {
         double silhouete_of_cluster = 0;
-        for (
-                unsigned long item = 0;
-                item < clusters[i].ItemIDs.
-
-                        size();
-
-                ++item) {
+        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
             double silhouete_of_item = 0;
             double a = 0;
-            for (
-                    unsigned long item_in_cluster = 0;
-                    item_in_cluster < clusters[i].ItemIDs.
-
-                            size();
-
-                    ++item_in_cluster) {
+            for (unsigned long item_in_cluster = 0; item_in_cluster < clusters[i].ItemIDs.size(); ++item_in_cluster) {
                 if (item == item_in_cluster)
                     continue;
-                a +=
-                        fast_distance_calculationV(clusters[i]
-                                                           .indexes[item], clusters[i].indexes[item_in_cluster],
-                                                   pointsVector.itemValues[clusters[i].indexes[item]].second,
-                                                   pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
+                a += fast_distance_calculationV(clusters[i].indexes[item], clusters[i].indexes[item_in_cluster],
+                                                pointsVector.itemValues[clusters[i].indexes[item]].second,
+                                                pointsVector.itemValues[clusters[i].indexes[item_in_cluster]].second);
             }
             if (clusters[i].ItemIDs.
 
@@ -368,27 +367,14 @@ void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &poin
             }
 
             double b = 0;
-            for (
-                    unsigned long item_in_cluster = 0;
-                    item_in_cluster < clusters[second_best_cluster].ItemIDs.
-
-                            size();
-
-                    ++item_in_cluster) {
-                b +=
-                        fast_distance_calculationV(clusters[i]
-                                                           .indexes[item], second_best_cluster,
+            for (unsigned long item_in_cluster = 0;
+                 item_in_cluster < clusters[second_best_cluster].ItemIDs.size(); ++item_in_cluster) {
+                b += fast_distance_calculationV(clusters[i].indexes[item], second_best_cluster,
                                                    pointsVector.itemValues[clusters[i].indexes[item]].second,
                                                    pointsVector.itemValues[clusters[second_best_cluster].indexes[item_in_cluster]].second);
             }
-            if (!clusters[second_best_cluster].ItemIDs.
-
-                    empty()
-
-                    )
-                b /= clusters[second_best_cluster].ItemIDs.
-
-                        size();
+            if (!clusters[second_best_cluster].ItemIDs.empty())
+                b /= clusters[second_best_cluster].ItemIDs.size();
 
             silhouete_of_item = b - a;
             if (b > a)
@@ -420,25 +406,37 @@ void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &poin
 }
 
 template<class inputData>
-void VectorClustering<inputData>::Printing() {
+void VectorClustering<inputData>::Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
+                                           unsigned int const &whichUpdate, bool const &complete,
+                                           double const &duration, InputGenericVector<inputData> &pointsVector) {
+    cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
-        cout << "CLUSTER-" << i + 1 << clusters[i].centroid << " {";
-//            for(unsigned int item=0; item<clusters[i].centroidCoordinates.size(); ++item){
-//                cout<<clusters[i].centroidCoordinates[item]<<" ";
-//            }
-//            cout<<endl;
-//            cout<<"Items"<<endl;
-        for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
-            if (item == clusters[i].ItemIDs.size() - 1) {
-                cout << clusters[i].ItemIDs[item] << "}" << endl;
-            } else
-                cout << clusters[i].ItemIDs[item] << ", ";
+        cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
+        if ("OutofDataset" != clusters[i].centroid)
+            cout << clusters[i].centroid;
+        else {
+            for (auto const &coord:clusters[i].centroidCoordinates)
+                cout << coord << " ";
         }
-//            cout<<"Indexes"<<endl;
-//            for(unsigned int item=0; item<clusters[i].indexes.size(); ++item){
-//                cout<<clusters[i].indexes[item]<<" ";
-//            }
-//            cout<<endl;
+        cout << "}" << endl;
+    }
+
+    cout << "Clustering_time: " << duration << endl;
+
+    Silhouette(pointsVector);
+
+    cout << endl;
+
+    if (complete) {
+        for (unsigned int i = 0; i < k; ++i) {
+            cout << "CLUSTER-" << i + 1 << " {";
+            for (unsigned long item = 0; item < clusters[i].ItemIDs.size(); ++item) {
+                if (item == clusters[i].ItemIDs.size() - 1) {
+                    cout << clusters[i].ItemIDs[item] << "}" << endl;
+                } else
+                    cout << clusters[i].ItemIDs[item] << ", ";
+            }
+        }
     }
 }
 
@@ -446,17 +444,18 @@ template<class inputData>
 VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                                               unsigned int const &whichInitialization,
                                               unsigned int const &whichAssignment,
-                                              unsigned int const &whichUpdate) {
+                                              unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
+                                              unsigned int const &L_hashtables, bool const &complete) {
     k = k_given;
     auto start = std::chrono::system_clock::now();
     if (whichInitialization == 1)
         InitializationSimplest(pointsVector);
     else
-        cout << "foo" << endl;
+        InitializationKmeansPlusPlus(pointsVector);
 
     //In this preload we create the lsh structures and put all points in the hash tables in order to be queried by the centroids
     if (whichAssignment == 2)
-        ReverseAssignmentPreload(pointsVector, 4, 3);
+        ReverseAssignmentPreload(pointsVector, k_of_lsh, L_hashtables);
 
     bool unchangedCenters = false;
     //If the centers do not change we are done. We have the min objective function.
@@ -479,11 +478,9 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
     if (whichAssignment == 2)
         free(lsh);
 
-    Printing();
+    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), pointsVector);
 
-    cout << "Clustering_time: " << clustering_duration.count() << endl;
 
-    Silhouette(pointsVector);
 
 }
 

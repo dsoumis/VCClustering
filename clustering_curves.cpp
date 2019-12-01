@@ -47,6 +47,23 @@ void CurveClustering<inputData>::InitializationSimplest(InputGenericVector<input
 }
 
 template<class inputData>
+void CurveClustering<inputData>::InitializationKmeansPlusPlus(InputGenericVector<inputData> const &curvesVector) {
+    vector<int> indexes;                            //vector of the places of pointsVector as centers
+    centers.resize(k);
+    chooseRandomCenter(curvesVector, indexes);
+    get<0>(centers[0]) = curvesVector.itemValues[indexes[0]].first; //Assign randomly the ItemID of a point of pointVector
+    get<1>(centers[0]) = curvesVector.itemValues[indexes[0]].second; //Assign randomly the coordinates of a point of pointVector
+    get<2>(centers[0]) = indexes[0];
+
+    for (unsigned int i = 1; i < k; i++) {
+        createNewCenter(curvesVector, indexes);
+        get<0>(centers[i]) = curvesVector.itemValues[indexes[i]].first; //Assign randomly the ItemID of a point of pointVector
+        get<1>(centers[i]) = curvesVector.itemValues[indexes[i]].second; //Assign randomly the coordinates of a point of pointVector
+        get<2>(centers[i]) = indexes[i];
+    }
+}
+
+template<class inputData>
 void CurveClustering<inputData>::AssignmentSimplest(InputGenericVector<inputData> const &curvesVector) {
 
     //For each assignment erase the vector of clusters
@@ -326,6 +343,8 @@ CurveClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &
                         meanA.first += pair.first;
                         meanA.second += pair.second;
                     }
+                    meanA.first /= A[j].size();
+                    meanA.second /= A[j].size();
                     C[j] = meanA;
                 }
 
@@ -416,6 +435,7 @@ CurveClustering<inputData>::UpdateALaLoyd(InputGenericVector<inputData> const &c
 
 template<class inputData>
 void CurveClustering<inputData>::Silhouette(InputGenericVector<inputData> &curvesVector) {
+    cout << "mpainei silhouete" << endl;
     double silhouete_total = 0;
     vector<vector<Cell>> foo;
     cout << "Silhouette: [";
@@ -501,7 +521,8 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
                                             unsigned int const &maxSize, unsigned int const &minSize,
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,
-                                            unsigned int const &whichUpdate) {
+                                            unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
+                                            unsigned int const &L_grid) {
     k = k_given;
     maxCurveSize = maxSize * 2;//Because its vector will consist of x1,y1,x2,y2,x3,y3 not in pairs
     minCurveSize = minSize;
@@ -510,14 +531,14 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
     if (whichInitialization == 1)
         InitializationSimplest(curvesVector);
     else
-        cout << "foo" << endl;
+        InitializationKmeansPlusPlus(curvesVector);
 
     //In this preload we create the lsh structures and put all points in the hash tables in order to be queried by the centroids
     if (whichAssignment == 2)
-        ReverseAssignmentPreload(curvesVector, 4, 4, 2);
+        ReverseAssignmentPreload(curvesVector, k_of_lsh, L_grid, 2);
 
     bool unchangedCenters = false;
-    int maxIterations = 10;
+    int maxIterations = 3;
     //If the centers do not change we are done. We have the min objective function.
     while (!unchangedCenters && maxIterations-- > 0) {
         cout << "3anampainw" << endl;

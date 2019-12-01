@@ -12,6 +12,7 @@ template<class inputData>
 class InputGenericVector {
 private:
 
+    vector<inputData> previous;
     vector<inputData> temp;
     string itemID;
 
@@ -24,7 +25,6 @@ public:
     vector<pair<string, vector<inputData> >> itemValues;
 
     //Function overloading
-    explicit InputGenericVector(string const &path, double &radius);
 
     explicit InputGenericVector(string const &path);
 

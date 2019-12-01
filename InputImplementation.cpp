@@ -7,11 +7,29 @@ void InputGenericVector<inputData>::push(inputData const &value) {
     temp.push_back(value);
 }
 
-template<class inputData>
-void InputGenericVector<inputData>::save() {
-    itemValues.push_back(make_pair(itemID, temp));
+template<>
+void InputGenericVector<double>::save() {
+    itemValues.emplace_back(make_pair(itemID, temp));
     temp.clear();
 }
+
+template<>
+void InputGenericVector<int>::save() {
+    itemValues.emplace_back(make_pair(itemID, temp));
+    temp.clear();
+}
+
+template<>
+void InputGenericVector<pair<double, double>>::save() {
+    if (temp != previous)
+        itemValues.push_back(make_pair(itemID, temp));
+    previous.clear();
+    previous.shrink_to_fit();
+    previous.resize(temp.size());
+    previous = temp;
+    temp.clear();
+}
+
 
 template<class inputData>
 void InputGenericVector<inputData>::printVector() {
@@ -66,25 +84,40 @@ InputGenericVector<inputData>::InputGenericVector(string const &path) { //For in
         inputFile.open(path);
         if (!inputFile.is_open())
             cout << "Can't open file" << endl;
+        string firstLine;
+        getline(inputFile, firstLine);  //read first line
         while (!inputFile.eof()) {
             string sLine;
             //Read line by line
             getline(inputFile, sLine);
             if (sLine.length() == 0)//Break if it's last line.
                 break;
-            size_t pos = 0;
+
 
             bool itemIDflag = true;
-            while ((pos = sLine.find(' ')) != string::npos) {
-                //Push every value delimited by space
-                if (!itemIDflag) //If it is not the item's id
-                    //this->push(stoi(sLine.substr(0, pos)));
-                    constructorFunction(*this, sLine.substr(0, pos));
-                else {
-                    itemID = sLine.substr(0, pos);
-                    itemIDflag = false;
+            string word;
+            for (auto &c:sLine) {
+                //Push every value delimited by white space
+                if (iswspace(c)) {
+                    if (!itemIDflag) { //If it is not the item's id
+                        //this->push(stoi(sLine.substr(0, pos)));
+                        constructorFunction(*this, word);           //push the created string
+                    } else {
+                        itemID = word;
+                        itemIDflag = false;
+                    }
+                    word = "";
+                } else {
+                    word += c;
                 }
-                sLine.erase(0, pos + 1);
+
+            }
+            //for the last word of line
+            if (!itemIDflag) { //If it is not the item's id
+                //this->push(stoi(sLine.substr(0, pos)));
+                constructorFunction(*this, word);
+            } else {
+                itemID = word;
             }
             //Save the pushed values
             this->save();
@@ -96,51 +129,6 @@ InputGenericVector<inputData>::InputGenericVector(string const &path) { //For in
     }
 }
 
-template<class inputData>
-InputGenericVector<inputData>::InputGenericVector(string const &path, double &radius) { //For query file
-    //The input file
-    ifstream inputFile;
-    try {
-        inputFile.open(path);
-        if (!inputFile.is_open())
-            cout << "Can't open file" << endl;
-        while (!inputFile.eof()) {
-            string sLine;
-            //Read line by line
-            getline(inputFile, sLine);
-            if (sLine.length() == 0)//Break if it's last line.
-                break;
-            size_t pos = 0;
-            if (sLine.find("Radius:") != string::npos) {
-                pos = sLine.find(' ');
-                sLine.erase(0, pos + 1);
-                pos = sLine.find(' ');
-                radius = stod(sLine.substr(0, pos));
-                continue;
-            }
-
-
-            bool itemIDflag = true;
-            while ((pos = sLine.find(' ')) != string::npos) {
-                //Push every value delimited by space
-                if (!itemIDflag) //If it is not the item's id
-                    //this->push(stoi(sLine.substr(0, pos)));
-                    constructorFunction(*this, sLine.substr(0, pos));
-                else {
-                    itemID = sLine.substr(0, pos);
-                    itemIDflag = false;
-                }
-                sLine.erase(0, pos + 1);
-            }
-            //Save the pushed values
-            this->save();
-        }
-
-        inputFile.close();
-    } catch (const char *msg) {
-        cerr << msg << endl;
-    }
-}
 
 template<>
 void InputGenericVector<pair<double, double>>::printVector() {
@@ -160,24 +148,24 @@ InputGenericVector<pair<double, double>>::InputGenericVector(string const &path,
                                                              unsigned int &minCurveSize,
                                                              bool const &input) { //Specific for trajectories dataset. Wont work with other files due to line variable.
     //The input file
+    previous.emplace_back(make_pair(0, 0));
     ifstream inputFile;
     try {
         inputFile.open(path);
         if (!inputFile.is_open())
             cout << "Can't open file" << endl;
 
-        unsigned int line = 0; //Number of line that is currently read
         unsigned int max_m = 0; //Max size of all grids
         unsigned int min_m = 4294967295;//Min size of all grids
+        string firstLine;
+        getline(inputFile, firstLine);  //read first line
+        bool prevFlag = true;
+
         while (!inputFile.eof()) {
             string sLine;
             //Read line by line
             getline(inputFile, sLine);
-            line++;
-            if (line > 7401 && input)
-                break;
-            if (line < 7402 && !input)
-                continue;
+
             if (sLine.length() == 0)//Break if it's last line=empty line.
                 break;
             size_t pos = 0;
