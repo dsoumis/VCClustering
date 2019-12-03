@@ -8,6 +8,7 @@
 //#define whichAssignment 1
 //#define whichUpdate 2
 int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
     string inputFile, configurationFile, outputFile;
     int whichInitialization = 1, whichAssignment = 1, whichUpdate = 2;
     bool complete = false;
@@ -45,5 +46,5 @@ int main(int argc, char **argv) {
                                                               whichUpdate, k_of_lsh, L_grids, complete, outputFile);
 
     }
-    return 5;
+    return RUN_ALL_TESTS();
 }

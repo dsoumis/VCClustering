@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <cwctype>
 #include "Dtw.h"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 using namespace std;
 
