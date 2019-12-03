@@ -28,9 +28,17 @@ void createNewCenter(InputGenericVector<inputData> const &pointsVec, vector<int>
 template<class inputData>
 double manhattanDistance(::vector<inputData> const &center, ::vector<inputData> const &point);
 
-template<class inputData>
-pair<double, int> findNearestCenter(::vector<inputData> const &item, ::vector<int> &centers,
-                                    InputGenericVector<inputData> const &pointsVec,
+
+pair<double, int> findNearestCenter(::vector<double> const &item, ::vector<int> &centers,
+                                    InputGenericVector<double> const &pointsVec,
+                                    unsigned long &i);
+
+pair<double, int> findNearestCenter(::vector<pair<double, double>> const &item, ::vector<int> &centers,
+                                    InputGenericVector<pair<double, double>> const &pointsVec,
+                                    unsigned long &i);
+
+pair<double, int> findNearestCenter(::vector<int> const &item, ::vector<int> &centers,
+                                    InputGenericVector<int> const &pointsVec,
                                     unsigned long &i);
 
 void calculatePartialSums(vector<double> &P, vector<double> &D);

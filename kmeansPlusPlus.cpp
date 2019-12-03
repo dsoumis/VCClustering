@@ -100,7 +100,6 @@ void countDist(InputGenericVector<double> const &pointsVec, ::vector<int> &cente
 template<>
 void countDist(InputGenericVector<pair<double, double>> const &pointsVec, ::vector<int> &centers, vector<double> &D) {
 
-
     for (unsigned long i = 0;
          i < pointsVec.itemValues.size(); i++) {       //for every point find the distance to the closest center
         vector<int>::iterator it;
@@ -185,10 +184,37 @@ double manhattanDistance(::vector<pair<double, double >> const &center, ::vector
 
 }
 
-template<class inputData>
-pair<double, int> findNearestCenter(::vector<inputData> const &item, ::vector<int> &centers,
-                                    InputGenericVector<inputData> const &pointsVec,
+pair<double, int> findNearestCenter(::vector<int> const &item, ::vector<int> &centers,
+                                    InputGenericVector<int> const &pointsVec,
                                     unsigned long &i) {
+
+    double min = 0;
+    int minPos = 0;
+    int flag = 0;
+
+    for (auto &pos:centers) {
+        if (i == pos)    //if its the center
+            continue;
+        double distance = manhattanDistance(pointsVec.itemValues[pos].second, item);
+        if (flag == 0) {//initialize min
+            min = distance;
+            minPos = 0;
+            flag = 1;
+            continue;
+        }
+        if (distance < min) {
+            min = distance;
+            minPos = pos;
+        }
+    }
+
+    return make_pair(min, minPos);   //return the nearest distance and center
+}
+
+pair<double, int> findNearestCenter(::vector<double> const &item, ::vector<int> &centers,
+                                    InputGenericVector<double> const &pointsVec,
+                                    unsigned long &i) {
+
     double min = 0;
     int minPos = 0;
     int flag = 0;
@@ -214,6 +240,7 @@ pair<double, int> findNearestCenter(::vector<inputData> const &item, ::vector<in
 
 pair<double, int> findNearestCenter(::vector<pair<double, double>> const &item, ::vector<int> &centers,
                                     InputGenericVector<pair<double, double>> const &curvesVec, unsigned long &i) {
+
     double min = 0;
     int minPos = 0;
     int flag = 0;

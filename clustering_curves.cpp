@@ -522,6 +522,7 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
     minCurveSize = minSize;
 
     auto start = std::chrono::system_clock::now();
+    cout << "Initializing.." << endl;
     if (whichInitialization == 1)
         InitializationSimplest(curvesVector);
     else
