@@ -35,4 +35,5 @@ public:
 
     void maxCoordFinder(double &max);
 };
+
 #endif

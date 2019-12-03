@@ -32,7 +32,8 @@ int main(int argc, char **argv) {
         InputGenericVector<double> pointsVector(
                 inputFile);//Implementation in InputImplementation.h/.cpp
         VectorClustering<double> vectorClustering(pointsVector, k, whichInitialization, whichAssignment, whichUpdate,
-                                                  k_of_lsh, L_hashtables, complete);
+                                                  k_of_lsh, L_hashtables, complete, outputFile);
+
     } else if (firstLine == "curves") {
         unsigned int maxCurveSize = 0, minCurveSize = 4294967295;
         InputGenericVector<pair<double, double>> curvesVector(inputFile,
@@ -41,19 +42,8 @@ int main(int argc, char **argv) {
 
         CurveClustering<pair<double, double>> curveClustering(curvesVector, k, maxCurveSize, minCurveSize,
                                                               whichInitialization, whichAssignment,
-                                                              whichUpdate, k_of_lsh, L_grids, complete);
-//        vector<vector<Cell>> C;         //2-d vector
-//        double dist = Dtw(curvesVector.itemValues[0].second, curvesVector.itemValues[1].second, C);
-//        cout << "diist " << dist << endl;
-//        cout << "Distance: "
-//             << C[curvesVector.itemValues[0].second.size() - 1][curvesVector.itemValues[1].second.size() - 1].value
-//             << endl;
-//        vector<pair<int, int>> path = printPath(C);
-//
-//        for (auto &num : path) { //print path
-//            cout << "(" << num.first << "," << num.second << ")" << "\t";
-//        }
-//        cout << endl;
+                                                              whichUpdate, k_of_lsh, L_grids, complete, outputFile);
+
     }
     return 5;
 }

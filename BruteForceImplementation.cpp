@@ -48,6 +48,7 @@ ExactNeighboursVector<double>::ExactNeighboursVector(vector<vector<double>> cons
         this->save("temp_query", "temp", neighborDistance, 0);
     }
 }
+
 template<class inputData>
 ExactNeighboursVector<inputData>::ExactNeighboursVector(InputGenericVector<inputData> const &pointsVector,
                                                         InputGenericVector<inputData> const &queriesVector,

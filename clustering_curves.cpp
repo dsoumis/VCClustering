@@ -111,6 +111,7 @@ double deltaCalculator(InputGenericVector<pair<double, double>> const &curvesVec
     delta /= curvesVector.itemValues.size();
     return delta;
 }
+
 template<class inputData>
 void CurveClustering<inputData>::ReverseAssignmentPreload(InputGenericVector<inputData> &curvesVector,
                                                           int const &k_vec_given, int const &L_given,
@@ -317,7 +318,7 @@ CurveClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &
                     C[j] = meanA;
                 }
 
-            } while (C_ == C /*|| Dtw(C, C_, dummy)<=0.05*/);
+            } while (C_ != C && Dtw(C, C_, dummy) > 0.5);
         } else {
             //Assign randomly the coordinates of a curve of curvesVector
             int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
@@ -465,7 +466,17 @@ void CurveClustering<inputData>::Silhouette(InputGenericVector<inputData> &curve
 template<class inputData>
 void CurveClustering<inputData>::Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                                           unsigned int const &whichUpdate, bool const &complete, double const &duration,
-                                          InputGenericVector<inputData> &curvesVector) {
+                                          InputGenericVector<inputData> &curvesVector, string const &outputFile) {
+    cout << "Printing file, calculating Silhouette.." << endl;
+    streambuf *psbuf, *backup;
+    ofstream filestr;
+    filestr.open(outputFile);
+
+    backup = cout.rdbuf();     // back up cout's streambuf
+
+    psbuf = filestr.rdbuf();        // get file's streambuf
+    cout.rdbuf(psbuf);         // assign streambuf to cout
+
     cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
@@ -495,6 +506,10 @@ void CurveClustering<inputData>::Printing(unsigned int const &whichInitializatio
             }
         }
     }
+
+    std::cout.rdbuf(backup);        // restore cout's original streambuf
+    filestr.close();
+
 }
 
 template<class inputData>
@@ -503,12 +518,19 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,
                                             unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
-                                            unsigned int const &L_grid, bool const &complete) {
+
+                                            unsigned int const &L_grid, bool const &complete,
+                                            string const &outputFile) {
+
+
     k = k_given;
     maxCurveSize = maxSize * 2;//Because its vector will consist of x1,y1,x2,y2,x3,y3 not in pairs
     minCurveSize = minSize;
 
     auto start = std::chrono::system_clock::now();
+
+    cout << "Initializing.." << endl;
+
     if (whichInitialization == 1)
         InitializationSimplest(curvesVector);
     else
@@ -535,13 +557,19 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
             UpdateALaLoyd(curvesVector, unchangedCenters);
 
     }
+
+    cout << "Clustering Done." << endl;
+
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> clustering_duration = end - start;
 
     if (whichAssignment == 2)
         free(lsh);
 
-    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), curvesVector);
+
+    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), curvesVector,
+             outputFile);
+
 }
 
 template
