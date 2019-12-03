@@ -318,7 +318,7 @@ CurveClustering<inputData>::UpdateSimplest(InputGenericVector<inputData> const &
                     C[j] = meanA;
                 }
 
-            } while (C_ == C /*|| Dtw(C, C_, dummy)<=0.05*/);
+            } while (C_ != C && Dtw(C, C_, dummy) > 0.5);
         } else {
             //Assign randomly the coordinates of a curve of curvesVector
             int randomIndex = generateNumberC(0, (int) curvesVector.itemValues.size() - 1);
@@ -467,6 +467,7 @@ template<class inputData>
 void CurveClustering<inputData>::Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                                           unsigned int const &whichUpdate, bool const &complete, double const &duration,
                                           InputGenericVector<inputData> &curvesVector, string const &outputFile) {
+    cout << "Printing file, calculating Silhouette.." << endl;
     streambuf *psbuf, *backup;
     ofstream filestr;
     filestr.open(outputFile);
@@ -547,6 +548,7 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
             UpdateALaLoyd(curvesVector, unchangedCenters);
 
     }
+    cout << "Clustering Done." << endl;
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> clustering_duration = end - start;
 
