@@ -361,7 +361,16 @@ void VectorClustering<inputData>::Silhouette(InputGenericVector<inputData> &poin
 template<class inputData>
 void VectorClustering<inputData>::Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                                            unsigned int const &whichUpdate, bool const &complete,
-                                           double const &duration, InputGenericVector<inputData> &pointsVector) {
+                                           double const &duration, InputGenericVector<inputData> &pointsVector,
+                                           string const &outputFile) {
+    streambuf *psbuf, *backup;
+    ofstream filestr;
+    filestr.open(outputFile);
+
+    backup = cout.rdbuf();     // back up cout's streambuf
+
+    psbuf = filestr.rdbuf();        // get file's streambuf
+    cout.rdbuf(psbuf);         // assign streambuf to cout
     cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
@@ -391,6 +400,8 @@ void VectorClustering<inputData>::Printing(unsigned int const &whichInitializati
             }
         }
     }
+    std::cout.rdbuf(backup);        // restore cout's original streambuf
+    filestr.close();
 }
 
 template<class inputData>
@@ -398,7 +409,8 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
                                               unsigned int const &whichInitialization,
                                               unsigned int const &whichAssignment,
                                               unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
-                                              unsigned int const &L_hashtables, bool const &complete) {
+                                              unsigned int const &L_hashtables, bool const &complete,
+                                              string const &outputFile) {
     k = k_given;
     auto start = std::chrono::system_clock::now();
     if (whichInitialization == 1)
@@ -431,7 +443,8 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
     if (whichAssignment == 2)
         free(lsh);
 
-    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), pointsVector);
+    Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), pointsVector,
+             outputFile);
 
 
 }

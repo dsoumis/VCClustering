@@ -84,13 +84,13 @@ private:
 
     void Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                   unsigned int const &whichUpdate, bool const &complete, double const &duration,
-                  InputGenericVector<inputData> &pointsVector);
+                  InputGenericVector<inputData> &pointsVector, string const &outputFile);
 
 public:
     explicit VectorClustering(InputGenericVector<inputData> &pointsVector, unsigned int const &k_given,
                               unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                               unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
-                              unsigned int const &L_hashtables, bool const &complete);
+                              unsigned int const &L_hashtables, bool const &complete, string const &outputFile);
 };
 
 #endif //SECOND_STEP_CLUSTERING_VECTORS_H

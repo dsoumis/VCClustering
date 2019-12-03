@@ -124,14 +124,14 @@ private:
 
     void Printing(unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                   unsigned int const &whichUpdate, bool const &complete, double const &duration,
-                  InputGenericVector<inputData> &curvesVector);
+                  InputGenericVector<inputData> &curvesVector, string const &outputFile);
 
 public:
     explicit CurveClustering(InputGenericVector<inputData> &curvesVector, unsigned int const &k_given,
                              unsigned int const &maxSize, unsigned int const &minSize,
                              unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                              unsigned int const &whichUpdate, unsigned int const &k_of_lsh, unsigned int const &L_grid,
-                             bool const &complete);
+                             bool const &complete, string const &outputFile);
 };
 
 #endif //SECOND_STEP_CLUSTERING_CURVES_H

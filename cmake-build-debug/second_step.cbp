@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="second_step"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="second_step">
+				<Option output="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/second_step.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/x86_64-pc-cygwin"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/../../../../lib/../include/w32api"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 second_step"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="second_step/fast">
+				<Option output="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/second_step.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/x86_64-pc-cygwin"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/../../../../lib/../include/w32api"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 second_step/fast"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/User/Desktop/vcc/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/BruteForceImplementation.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/BruteForceImplementation.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/ClusterStructure.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/Dtw.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/Dtw.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/GridImplementation.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/GridImplementation.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/HashFunctions.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/HashFunctions.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/HashPair.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/HashTables.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/HashTables.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/InputImplementation.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/InputImplementation.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/clustering_curves.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/clustering_curves.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/clustering_vectors.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/clustering_vectors.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/kmeansPlusPlus.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/kmeansPlusPlus.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/main.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/utilities.cpp">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/utilities.h">
+			<Option target="second_step"/>
+		</Unit>
+		<Unit filename="/cygdrive/c/Users/User/Desktop/vcc/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
