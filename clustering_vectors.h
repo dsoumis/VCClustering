@@ -91,6 +91,7 @@ public:
                               unsigned int const &whichInitialization, unsigned int const &whichAssignment,
                               unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
                               unsigned int const &L_hashtables, bool const &complete, string const &outputFile);
+
 };
 
 #endif //SECOND_STEP_CLUSTERING_VECTORS_H

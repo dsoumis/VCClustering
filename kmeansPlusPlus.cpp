@@ -100,6 +100,7 @@ void countDist(InputGenericVector<double> const &pointsVec, ::vector<int> &cente
 template<>
 void countDist(InputGenericVector<pair<double, double>> const &pointsVec, ::vector<int> &centers, vector<double> &D) {
 
+
     for (unsigned long i = 0;
          i < pointsVec.itemValues.size(); i++) {       //for every point find the distance to the closest center
         vector<int>::iterator it;
@@ -183,6 +184,7 @@ template<>
 double manhattanDistance(::vector<pair<double, double >> const &center, ::vector<pair<double, double >> const &point) {
 
 }
+
 
 pair<double, int> findNearestCenter(::vector<int> const &item, ::vector<int> &centers,
                                     InputGenericVector<int> const &pointsVec,

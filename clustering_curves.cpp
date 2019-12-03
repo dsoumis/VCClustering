@@ -476,6 +476,7 @@ void CurveClustering<inputData>::Printing(unsigned int const &whichInitializatio
 
     psbuf = filestr.rdbuf();        // get file's streambuf
     cout.rdbuf(psbuf);         // assign streambuf to cout
+
     cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
@@ -505,8 +506,10 @@ void CurveClustering<inputData>::Printing(unsigned int const &whichInitializatio
             }
         }
     }
+
     std::cout.rdbuf(backup);        // restore cout's original streambuf
     filestr.close();
+
 }
 
 template<class inputData>
@@ -515,14 +518,19 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
                                             unsigned int const &whichInitialization,
                                             unsigned int const &whichAssignment,
                                             unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
+
                                             unsigned int const &L_grid, bool const &complete,
                                             string const &outputFile) {
+
+
     k = k_given;
     maxCurveSize = maxSize * 2;//Because its vector will consist of x1,y1,x2,y2,x3,y3 not in pairs
     minCurveSize = minSize;
 
     auto start = std::chrono::system_clock::now();
+
     cout << "Initializing.." << endl;
+
     if (whichInitialization == 1)
         InitializationSimplest(curvesVector);
     else
@@ -549,15 +557,19 @@ CurveClustering<inputData>::CurveClustering(InputGenericVector<inputData> &curve
             UpdateALaLoyd(curvesVector, unchangedCenters);
 
     }
+
     cout << "Clustering Done." << endl;
+
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> clustering_duration = end - start;
 
     if (whichAssignment == 2)
         free(lsh);
 
+
     Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), curvesVector,
              outputFile);
+
 }
 
 template

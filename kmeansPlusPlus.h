@@ -29,6 +29,7 @@ template<class inputData>
 double manhattanDistance(::vector<inputData> const &center, ::vector<inputData> const &point);
 
 
+
 pair<double, int> findNearestCenter(::vector<double> const &item, ::vector<int> &centers,
                                     InputGenericVector<double> const &pointsVec,
                                     unsigned long &i);

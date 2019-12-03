@@ -3,6 +3,7 @@
 int generateNumberV(int const &range_from,
                     int const &range_to) {      //https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 
+
     random_device rand_dev;
     mt19937 generator(rand_dev());
     uniform_int_distribution<> distr(range_from, range_to);
@@ -371,6 +372,7 @@ void VectorClustering<inputData>::Printing(unsigned int const &whichInitializati
 
     psbuf = filestr.rdbuf();        // get file's streambuf
     cout.rdbuf(psbuf);         // assign streambuf to cout
+
     cout << "Algorithm: I" << whichInitialization << "A" << whichAssignment << "U" << whichUpdate << endl;
     for (unsigned int i = 0; i < k; ++i) {
         cout << "CLUSTER-" << i + 1 << " {size: " << clusters[i].ItemIDs.size() << ", centroid: ";
@@ -411,6 +413,7 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
                                               unsigned int const &whichUpdate, unsigned int const &k_of_lsh,
                                               unsigned int const &L_hashtables, bool const &complete,
                                               string const &outputFile) {
+
     k = k_given;
     auto start = std::chrono::system_clock::now();
     if (whichInitialization == 1)
@@ -442,6 +445,7 @@ VectorClustering<inputData>::VectorClustering(InputGenericVector<inputData> &poi
 
     if (whichAssignment == 2)
         free(lsh);
+
 
     Printing(whichInitialization, whichAssignment, whichUpdate, complete, clustering_duration.count(), pointsVector,
              outputFile);

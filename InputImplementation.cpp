@@ -22,7 +22,8 @@ void InputGenericVector<int>::save() {
 template<>
 void InputGenericVector<pair<double, double>>::save() {
     if (temp != previous)
-        itemValues.emplace_back(make_pair(itemID, temp));
+       itemValues.emplace_back(make_pair(itemID, temp));
+
     previous.clear();
     previous.shrink_to_fit();
     previous.resize(temp.size());
@@ -55,6 +56,7 @@ void InputGenericVector<pair<double, double>>::maxCoordFinder(double &max) {
     }
 }
 
+
 template<>
 void InputGenericVector<int>::constructorFunction(InputGenericVector<int> &vector, string const &value) {
     vector.push(stoi(value));
@@ -77,6 +79,8 @@ void InputGenericVector<pair<double, double>>::constructorFunction(InputGenericV
     vector_value.second = stod(temp_str);
     vector.push(vector_value);
 }
+
+
 
 template<class inputData>
 InputGenericVector<inputData>::InputGenericVector(string const &path) { //For input file
@@ -209,6 +213,7 @@ InputGenericVector<pair<double, double>>::InputGenericVector(string const &path,
         cerr << msg << endl;
     }
 }
+
 
 template
 class InputGenericVector<int>; //In order to not fail the compile as the compiler wants to see the data that the templated class will have.
