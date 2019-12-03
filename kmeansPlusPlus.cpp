@@ -179,6 +179,18 @@ double manhattanDistance(::vector<inputData> const &center, ::vector<inputData> 
 
 }
 
+TEST(manhattanDistance, numsDouble) {
+
+    vector<double> x, y;
+    x.push_back(1.0);
+    x.push_back(2.0);
+    x.push_back(2.0);
+    y.push_back(2.0);
+    y.push_back(5.0);
+    y.push_back(3.0);
+    EXPECT_EQ(manhattanDistance(x, y), 5.0);
+}
+
 template<>
 double manhattanDistance(::vector<pair<double, double >> const &center, ::vector<pair<double, double >> const &point) {
 
